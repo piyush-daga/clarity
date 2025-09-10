@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="g07" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fee2e2"/>
+      <stop offset="1" stop-color="#fde68a"/>
+    </linearGradient>
+    <g id="firework" fill="none" stroke="#ef4444" stroke-opacity="0.25" stroke-width="3">
+      <circle r="22"/>
+      <line x1="0" y1="-26" x2="0" y2="-40"/>
+      <line x1="22" y1="0" x2="38" y2="0"/>
+      <line x1="0" y1="26" x2="0" y2="40"/>
+      <line x1="-22" y1="0" x2="-38" y2="0"/>
+    </g>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#g07)"/>
+  <g transform="translate(300 220)"><use href="#firework"/></g>
+  <g transform="translate(820 180) scale(1.2)"><use href="#firework"/></g>
+  <g transform="translate(1200 260) scale(0.9)"><use href="#firework"/></g>
+  <g opacity="0.08" fill="#f59e0b">
+    <path d="M0 820 H1600 V1000 H0z"/>
+  </g>
+</svg>

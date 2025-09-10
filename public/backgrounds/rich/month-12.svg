@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="g12" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f1f5f9"/>
+      <stop offset="1" stop-color="#e2e8f0"/>
+    </linearGradient>
+    <g id="pine" fill="#334155" fill-opacity="0.18">
+      <polygon points="0,0 -30,40 30,40"/>
+      <polygon points="0,-20 -40,20 40,20"/>
+      <polygon points="0,-40 -50,0 50,0"/>
+      <rect x="-8" y="40" width="16" height="18"/>
+    </g>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#g12)"/>
+  <g opacity="0.09" fill="#64748b">
+    <path d="M0 840 H1600 V1000 H0z"/>
+  </g>
+  <g transform="translate(220 780)"><use href="#pine"/></g>
+  <g transform="translate(420 780) scale(1.2)"><use href="#pine"/></g>
+  <g transform="translate(980 780) scale(0.9)"><use href="#pine"/></g>
+  <g transform="translate(1240 780) scale(1.1)"><use href="#pine"/></g>
+</svg>

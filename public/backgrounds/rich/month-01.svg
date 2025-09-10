@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="g01" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e0f2fe"/>
+      <stop offset="1" stop-color="#c7d2fe"/>
+    </linearGradient>
+    <g id="snowflake" fill="none" stroke="#0ea5e9" stroke-opacity="0.25" stroke-width="3">
+      <path d="M0,-14 L0,14"/>
+      <path d="M-14,0 L14,0"/>
+      <path d="M-10,-10 L10,10"/>
+      <path d="M10,-10 L-10,10"/>
+    </g>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#g01)"/>
+  <g opacity="0.08" fill="#0ea5e9">
+    <rect x="0" y="780" width="1600" height="220"/>
+  </g>
+  <g transform="translate(200 160)">
+    <use href="#snowflake"/>
+  </g>
+  <g transform="translate(420 300) scale(1.2)">
+    <use href="#snowflake"/>
+  </g>
+  <g transform="translate(900 180) scale(0.8)">
+    <use href="#snowflake"/>
+  </g>
+  <g transform="translate(1200 280) scale(1.4)">
+    <use href="#snowflake"/>
+  </g>
+  <g transform="translate(700 480) scale(1)">
+    <use href="#snowflake"/>
+  </g>
+</svg>

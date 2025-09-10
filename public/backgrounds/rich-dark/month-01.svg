@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <!-- January: Makar Sankranti (Kites) -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1730"/>
+      <stop offset="1" stop-color="#102a4c"/>
+    </linearGradient>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1730"/>
+      <stop offset="1" stop-color="#102a4c"/>
+    </linearGradient>
+    <linearGradient id="kite1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06b6d4"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="kite2" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f59e0b"/>
+      <stop offset="1" stop-color="#fbbf24"/>
+    </linearGradient>
+    <linearGradient id="kite3" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#818cf8"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <g id="kite">
+      <polygon points="0,-36 36,0 0,36 -36,0" fill="currentColor" opacity="0.85"/>
+      <path d="M0,36 c -4,14 -18,28 -34,40" stroke="currentColor" stroke-width="2" fill="none" opacity="0.5"/>
+      <circle cx="-38" cy="75" r="5" fill="currentColor" opacity="0.6"/>
+    </g>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#g)"/>
+  <rect width="1600" height="1000" fill="url(#sky)" opacity="0.5"/>
+  <!-- Ground horizon -->
+  <rect x="0" y="800" width="1600" height="200" fill="#0a1020" opacity="0.6"/>
+
+  <!-- Kites -->
+  <g filter="url(#glow)">
+    <g transform="translate(320 220) rotate(-12)" style="color:url(#kite1)"><use href="#kite"/></g>
+    <g transform="translate(520 320) rotate(8) scale(1.2)" style="color:url(#kite2)"><use href="#kite"/></g>
+    <g transform="translate(980 240) rotate(-6) scale(0.9)" style="color:url(#kite3)"><use href="#kite"/></g>
+    <g transform="translate(1240 340) rotate(14) scale(1.1)" style="color:url(#kite1)"><use href="#kite"/></g>
+    <g transform="translate(740 480) rotate(-20) scale(1.0)" style="color:url(#kite2)"><use href="#kite"/></g>
+  </g>
+</svg>

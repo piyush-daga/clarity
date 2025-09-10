@@ -1,0 +1,373 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #f3f4f6; /* light background */
+  --cal-bg-opacity: 0.35;
+  --cal-bg-filter: saturate(1.25);
+}
+
+.dark {
+  --bg: #0b1730; /* deeper blue‑ink for dark mode */
+  --cal-bg-opacity: 0.22;
+  --cal-bg-filter: brightness(0.62) saturate(1.25) hue-rotate(-8deg);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+}
+
+.dark body {
+  color: #e5e7eb; /* slate-200 */
+}
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  opacity: var(--cal-bg-opacity);
+  filter: var(--cal-bg-filter);
+}
+
+
+
+.card {
+  @apply bg-white rounded-2xl shadow-soft border border-gray-100 text-slate-900;
+}
+
+.dark .card {
+  @apply bg-slate-900/60 border-slate-700 text-slate-100;
+}
+
+
+.btn {
+  @apply inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 transition text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/70;
+}
+
+.dark .btn {
+  @apply border-slate-700 bg-slate-800 hover:bg-slate-700/80 text-slate-100 focus-visible:ring-blue-400/50;
+}
+
+.btn-icon { @apply h-10 w-10 p-0 inline-flex items-center justify-center rounded-xl; }
+.btn-ghost { @apply bg-transparent border-transparent hover:bg-slate-100; }
+.dark .btn-ghost { @apply hover:bg-slate-800/70; }
+
+.btn-primary {
+  @apply bg-blue-600 text-white border-transparent hover:bg-blue-700 rounded-xl;
+}
+
+.dark .btn-primary {
+  @apply bg-blue-600 hover:bg-blue-500 text-white;
+}
+
+
+.input {
+  @apply w-full px-3 py-2 h-10 rounded-xl border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 placeholder:text-gray-400;
+}
+
+.dark .input {
+  @apply border-slate-700 bg-slate-800 text-slate-100 placeholder:text-gray-400;
+}
+
+/* Tweak time input icon and alignment */
+input[type="time"].input { min-width: 7rem; }
+input[type="time"].input::-webkit-calendar-picker-indicator { opacity: 0.7; filter: invert(0.2); }
+.dark input[type="time"].input::-webkit-calendar-picker-indicator { filter: invert(0.85); opacity: 0.8; }
+
+/* FullCalendar buttons styled like app buttons */
+.fc .fc-button { 
+  background: #ffffff !important; 
+  color: #0f172a !important; 
+  border: 1px solid #e5e7eb !important; 
+  border-radius: 12px !important; 
+  padding: 6px 12px !important; 
+  height: 40px !important; 
+  box-shadow: none !important;
+  text-transform: capitalize !important;
+}
+.fc .fc-button:hover { background: #f8fafc !important; }
+.dark .fc .fc-button { background: #1f2937 !important; color: #e5e7eb !important; border-color: #334155 !important; }
+.dark .fc .fc-button:hover { background: #334155 !important; }
+.fc .fc-button:focus-visible { outline: 2px solid rgba(96,165,250,0.6) !important; outline-offset: 2px; }
+.fc .fc-button:disabled { opacity: 0.5 !important; }
+.fc .fc-button-active { background: rgba(15,23,42,0.06) !important; border-color: #94a3b8 !important; }
+.dark .fc .fc-button-active { background: rgba(255,255,255,0.08) !important; border-color: #64748b !important; }
+.fc .fc-button-group > .fc-button:not(:first-child) { margin-left: 6px !important; }
+
+
+.splitter-handle {
+  @apply h-2 bg-gray-200 hover:bg-gray-300 cursor-row-resize rounded;
+}
+
+.dark .splitter-handle {
+  @apply bg-slate-700 hover:bg-slate-600;
+}
+
+
+/* Subtle, thin scrollbars */
+.thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156,163,175,0.6) transparent; /* thumb, track */
+}
+.thin-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(156,163,175,0.4); /* gray-400 */
+  border-radius: 9999px;
+}
+.thin-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(156,163,175,0.6);
+}
+
+.dark .thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(100,116,139,0.35); /* slate-500 */
+}
+.dark .thin-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(100,116,139,0.55);
+}
+
+/* Reserve scrollbar gutter to prevent width shift on view change */
+.calendar-shell {
+  scrollbar-gutter: stable both-edges;
+}
+
+/* Minimal event styling when using top border color only */
+.fc-event-minimal {
+  border: none !important;
+  color: #0f172a !important; /* slate-900 */
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 6px 16px rgba(0,0,0,0.06);
+  overflow: hidden;
+  padding: 2px 6px;
+  transition: box-shadow 120ms ease, transform 120ms ease;
+  display: flex;              /* make whole event a flex column */
+  flex-direction: column;
+  height: 100%;              /* fill allocated event height */
+  border-top: 3px solid transparent;
+  background: #ffffff !important; /* solid light background for contrast */
+}
+
+.dark .fc-event-minimal {
+  color: #e8eef7 !important; /* high-contrast text */
+  background: rgba(255,255,255,0.16) !important; /* more visible on dark bg */
+  box-shadow: 0 1px 2px rgba(0,0,0,0.25), 0 8px 18px rgba(0,0,0,0.25);
+}
+
+/* Subtle grid lines in dark mode for FullCalendar */
+.dark .fc-theme-standard td,
+.dark .fc-theme-standard th,
+.dark .fc .fc-scrollgrid,
+.dark .fc .fc-col-header-cell,
+.dark .fc .fc-daygrid-day,
+.dark .fc .fc-timegrid-slot,
+.dark .fc .fc-timegrid-divider {
+  border-color: rgba(148, 163, 184, 0.08) !important; /* slate-400 @ 8% */
+}
+
+/* Hour/minor slot lines even softer */
+.dark .fc .fc-timegrid-slot { border-top-color: rgba(148, 163, 184, 0.06) !important; }
+.dark .fc .fc-timegrid-slot-lane { border-top-color: rgba(148, 163, 184, 0.05) !important; }
+
+/* Hide 30-minute minor lines in time grid (keep only hourly) */
+.fc .fc-timegrid-slot-minor,
+.fc .fc-timegrid-slot-lane.fc-timegrid-slot-minor,
+.fc .fc-timegrid-slot.fc-timegrid-slot-minor {
+  border-top-color: transparent !important;
+}
+
+/* Today background subtle tint in dark */
+.dark .fc .fc-daygrid-day.fc-day-today,
+.dark .fc .fc-timegrid-col.fc-day-today {
+  background-color: rgba(59, 130, 246, 0.08) !important; /* blue-500 @ 8% */
+}
+
+/* Header background remains transparent; ensure text is readable */
+.dark .fc .fc-col-header-cell-cushion,
+.dark .fc .fc-timegrid-axis-cushion,
+.dark .fc .fc-daygrid-day-number {
+  color: #cbd5e1; /* slate-300 */
+}
+
+/* Time axis aesthetics */
+.fc .fc-timegrid-axis-cushion {
+  color: #a3a3a3; /* slightly more muted in light */
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  font-size: 13px; /* a touch smaller */
+  opacity: 0.9;
+}
+.dark .fc .fc-timegrid-axis-cushion {
+  color: #94a3b8; /* muted slate for dark */
+  opacity: 0.85;
+}
+.fc .fc-timegrid-axis .fc-scroller { overflow: visible !important; }
+.fc .fc-timegrid-axis { background: transparent !important; }
+.fc .fc-timegrid-now-indicator-line { border-color: #ef4444 !important; }
+.fc .fc-timegrid-now-indicator-arrow { display: none !important; }
+/* Remove text badge on the red line */
+.fc .fc-now-badge { display: none; }
+
+/* Remove default panel backgrounds to let our card/overlay shine */
+.fc .fc-scrollgrid { background: transparent !important; }
+.fc .fc-col-header, .fc .fc-col-header-cell { background: transparent !important; }
+.fc .fc-daygrid-day-bg { background: transparent !important; }
+
+/* Minimal weekday style: Mon 8, with a red date badge for today */
+.fc .fc-col-header-cell { padding: 10px 0 !important; border: none !important; }
+.fc .fc-col-header-cell-cushion { background: transparent !important; border: 0 !important; padding: 0 !important; text-transform: none !important; letter-spacing: 0 !important; }
+.fc .fc-dow { font-weight: 600; color: #a3a3a3; margin-right: 6px; letter-spacing: 0.005em; }
+.dark .fc .fc-dow { color: #94a3b8; }
+.fc .fc-date-badge { font-weight: 600; color: #a3a3a3; letter-spacing: 0.005em; }
+.dark .fc .fc-date-badge { color: #94a3b8; }
+.fc .fc-date-badge.is-today { background: #ef4444; color: white; border-radius: 8px; padding: 2px 6px; display: inline-block; }
+
+.fc-event-minimal .fc-event-main, .fc-event-minimal .fc-event-time {
+  color: inherit !important;
+  font-weight: 500;
+  text-overflow: clip;
+  overflow: visible;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* Larger checkbox inside calendar events for easier tapping */
+.fc-event-minimal input[type="checkbox"] {
+  width: 16px; height: 16px; accent-color: #3b82f6;
+}
+
+/* Ensure event content can push footer to bottom */
+.fc-event-minimal .fc-event-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;           /* take remaining height inside event */
+  min-height: 0;            /* allow children to shrink */
+  overflow-wrap: anywhere;  /* allow long words to wrap */
+}
+
+/* Ensure body area can scroll its overflow (hidden here) and not overlap footer */
+.fc-event-minimal .fc-event-body {
+  min-height: 0; /* needed for flex children to shrink in Firefox */
+  overflow: hidden;
+}
+
+/* Let titles wrap naturally to fill available body height */
+.fc-event-minimal .fc-event-title {
+  display: block;
+  overflow: hidden;          /* excess text clipped within body */
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Styled footer area for time */
+.fc-event-minimal .fc-event-footer {
+  /* border/top spacing set inline via utility classes */
+  flex: 0 0 auto;           /* footer stays intrinsic height */
+}
+
+.fc-event-minimal:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08), 0 10px 24px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+
+/* Outline style for in-creation events */
+.fc-event-creating {
+  background: transparent !important;
+  border: 2px dashed rgba(148,163,184,0.6) !important; /* slate-400 */
+  box-shadow: none !important;
+}
+
+/* Stage styling via classes (no inline styles) */
+.fc-event-neutral { background: rgba(255,255,255,0.94) !important; border-top-color: #e5e7eb !important; }
+.fc-event-todo { background: #fefce8 !important; border-top-color: #fef08a !important; }
+.fc-event-done { background: #f0fdf4 !important; border-top-color: #bbf7d0 !important; }
+
+/* Keep neutral only; stage colors removed */
+/* .fc-event-neutral/.todo/.done no longer applied */
+
+.fc-pill {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 9999px;
+  background: rgba(203,213,225,0.6); /* slate-300 */
+  color: #0f172a; /* slate-900 */
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.dark .fc-pill {
+  background: rgba(51,65,85,0.6); /* slate-700 */
+  color: #e5e7eb; /* slate-200 */
+}
+
+/* Rounded circular checkboxes (modern) */
+.checkbox-circle,
+.fc-event-minimal input[type="checkbox"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  border: 2px solid #cbd5e1; /* slate-300 */
+  background: transparent;
+  display: inline-grid;
+  place-content: center;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 80ms ease;
+  color: #3b82f6; /* blue-500 as currentColor */
+}
+.dark .checkbox-circle,
+.dark .fc-event-minimal input[type="checkbox"] {
+  border-color: #475569; /* slate-600 */
+}
+.checkbox-circle:focus-visible,
+.fc-event-minimal input[type="checkbox"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.35);
+}
+.checkbox-circle:active,
+.fc-event-minimal input[type="checkbox"]:active { transform: scale(0.96); }
+
+.checkbox-circle::after,
+.fc-event-minimal input[type="checkbox"]::after {
+  content: '';
+  width: 8px;
+  height: 4px;
+  border: 2px solid white;
+  border-top: 0;
+  border-right: 0;
+  transform: rotate(-45deg) scale(0);
+  transform-origin: center;
+  transition: transform 120ms ease;
+}
+.checkbox-circle:checked,
+.fc-event-minimal input[type="checkbox"]:checked {
+  background: currentColor;
+  border-color: currentColor;
+}
+.checkbox-circle:checked::after,
+.fc-event-minimal input[type="checkbox"]:checked::after { transform: rotate(-45deg) scale(1); }
+
+/* Sizes */
+.checkbox-xl { width: 20px; height: 20px; }
+
+/* Datetime inputs styling to match app */
+input[type="datetime-local"].input { appearance: none; }
+input[type="datetime-local"].input::-webkit-calendar-picker-indicator { opacity: 0.7; filter: invert(0.2); }
+.dark input[type="datetime-local"].input::-webkit-calendar-picker-indicator { filter: invert(0.85); opacity: 0.8; }

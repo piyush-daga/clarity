@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="g02" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fde68a"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#g02)"/>
+  <g fill="#78350f" opacity="0.12">
+    <path d="M0 820 H1600 V1000 H0z"/>
+    <!-- simple skyline silhouettes -->
+    <path d="M0 820 L80 780 L120 820 L200 760 L240 820 L340 740 L360 820 L480 770 L520 820 L600 760 L660 820 L740 780 L800 820 L900 770 L980 820 L1060 780 L1120 820 L1260 760 L1320 820 L1450 780 L1500 820 Z"/>
+  </g>
+  <g opacity="0.08" fill="#fdba74">
+    <circle cx="250" cy="200" r="100"/>
+    <circle cx="1300" cy="140" r="60"/>
+    <circle cx="900" cy="260" r="80"/>
+  </g>
+</svg>

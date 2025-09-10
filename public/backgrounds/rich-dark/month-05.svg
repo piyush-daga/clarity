@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <!-- May: Buddha Purnima (Lotus + Dharma Wheel) -->
+  <defs>
+    <linearGradient id="bg5" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1730"/>
+      <stop offset="1" stop-color="#102a4c"/>
+    </linearGradient>
+    <linearGradient id="lotus" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#22c55e"/>
+    </linearGradient>
+    <linearGradient id="dharma" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#facc15"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg5)"/>
+  <!-- Dharma wheel -->
+  <g transform="translate(1220 280)" opacity="0.25" stroke="url(#dharma)" stroke-width="10" fill="none">
+    <circle cx="0" cy="0" r="100"/>
+    <circle cx="0" cy="0" r="60"/>
+    <g stroke-linecap="round">
+      <line x1="0" y1="-100" x2="0" y2="-125"/>
+      <line x1="0" y1="100" x2="0" y2="125"/>
+      <line x1="-100" y1="0" x2="-125" y2="0"/>
+      <line x1="100" y1="0" x2="125" y2="0"/>
+      <line x1="70.7" y1="70.7" x2="88.4" y2="88.4"/>
+      <line x1="-70.7" y1="70.7" x2="-88.4" y2="88.4"/>
+      <line x1="70.7" y1="-70.7" x2="88.4" y2="-88.4"/>
+      <line x1="-70.7" y1="-70.7" x2="-88.4" y2="-88.4"/>
+    </g>
+  </g>
+  <!-- Lotus -->
+  <g transform="translate(420 380) scale(1.2)" opacity="0.8">
+    <g fill="url(#lotus)">
+      <path d="M0,60 C-80,40 -100,0 -40,-40 C-20,-10 -10,10 0,30 C10,10 20,-10 40,-40 C100,0 80,40 0,60 Z"/>
+      <path d="M0,40 C-50,30 -70,0 -30,-30 C-10,-8 -6,6 0,20 C6,6 10,-8 30,-30 C70,0 50,30 0,40 Z" opacity="0.8"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <!-- February: Maha Shivaratri (Trishul + Crescent) -->
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1730"/>
+      <stop offset="1" stop-color="#102a4c"/>
+    </linearGradient>
+    <radialGradient id="moonGrad" cx="50%" cy="20%" r="20%">
+      <stop offset="0" stop-color="#e2e8f0"/>
+      <stop offset="1" stop-color="#94a3b8" stop-opacity="0.1"/>
+    </radialGradient>
+    <linearGradient id="trishulG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg2)"/>
+  <circle cx="1250" cy="200" r="160" fill="url(#moonGrad)" opacity="0.35"/>
+  <!-- Trishul silhouette -->
+  <g transform="translate(260 220) scale(1.2)" filter="url(#glow2)" opacity="0.85">
+    <path d="M0,-90 C-30,-60 -34,-20 -20,0 C-6,-20 -4,-40 0,-56 C4,-40 6,-20 20,0 C34,-20 30,-60 0,-90 Z" fill="url(#trishulG)"/>
+    <rect x="-6" y="-56" width="12" height="180" rx="3" fill="url(#trishulG)"/>
+    <circle cx="0" cy="70" r="16" fill="url(#trishulG)"/>
+  </g>
+  <g transform="translate(540 320) scale(0.9)" filter="url(#glow2)" opacity="0.5">
+    <use href="#t"/>
+    <path d="M0,-90 C-30,-60 -34,-20 -20,0 C-6,-20 -4,-40 0,-56 C4,-40 6,-20 20,0 C34,-20 30,-60 0,-90 Z" fill="url(#trishulG)"/>
+    <rect x="-5" y="-56" width="10" height="160" rx="3" fill="url(#trishulG)"/>
+    <circle cx="0" cy="60" r="14" fill="url(#trishulG)"/>
+  </g>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <!-- April: Baisakhi (Wheat stalks + Dhol) -->
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0b1730"/>
+      <stop offset="1" stop-color="#102a4c"/>
+    </linearGradient>
+    <linearGradient id="wheat" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbbf24"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#bg4)"/>
+  <g opacity="0.12">
+    <rect x="0" y="780" width="1600" height="220" fill="#0a1020"/>
+  </g>
+  <!-- Wheat field silhouettes -->
+  <g opacity="0.25" fill="url(#wheat)">
+    <path d="M200,860 c 20,-60 40,-120 10,-160 c 20,30 20,80 60,120 c -30,-40 -20,-90 10,-130 c -4,60 26,120 70,180 z"/>
+    <path d="M360,860 c 15,-50 28,-110 -2,-150 c 30,30 36,70 68,110 c -24,-40 -16,-90 12,-130 c 0,60 24,120 64,170 z"/>
+    <path d="M520,860 c 10,-50 24,-110 -8,-150 c 30,30 42,70 70,110 c -22,-40 -14,-90 16,-130 c 0,60 20,120 54,170 z"/>
+  </g>
+  <!-- Dhol outline -->
+  <g opacity="0.6" stroke="#f59e0b" stroke-width="3" fill="none">
+    <ellipse cx="1150" cy="640" rx="150" ry="90"/>
+    <ellipse cx="1250" cy="640" rx="150" ry="90"/>
+    <line x1="1000" y1="640" x2="1400" y2="640"/>
+    <line x1="1060" y1="600" x2="1340" y2="680"/>
+    <line x1="1060" y1="680" x2="1340" y2="600"/>
+  </g>
+</svg>

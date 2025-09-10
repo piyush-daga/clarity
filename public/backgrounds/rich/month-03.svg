@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="g03" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#dcfce7"/>
+      <stop offset="1" stop-color="#bbf7d0"/>
+    </linearGradient>
+    <g id="blossom" fill="#22c55e" fill-opacity="0.18">
+      <circle r="6"/>
+      <circle r="6" cx="12"/>
+      <circle r="6" cx="6" cy="-10"/>
+      <circle r="6" cx="6" cy="10"/>
+    </g>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#g03)"/>
+  <g opacity="0.08" fill="#16a34a">
+    <path d="M0 820 H1600 V1000 H0z"/>
+    <path d="M0 820 L120 780 L200 820 L340 800 L420 820 L600 780 L700 820 L860 780 L980 820 L1140 790 L1300 820 L1500 800 L1600 820 Z"/>
+  </g>
+  <g transform="translate(300 240)"><use href="#blossom"/></g>
+  <g transform="translate(500 180)"><use href="#blossom"/></g>
+  <g transform="translate(900 260)"><use href="#blossom"/></g>
+  <g transform="translate(1200 220)"><use href="#blossom"/></g>
+</svg>

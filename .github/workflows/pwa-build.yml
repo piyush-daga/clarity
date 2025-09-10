@@ -1,0 +1,103 @@
+name: Build PWA and Bump Version
+
+on:
+  push:
+    branches: [ "master" ]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build and package
+    # Extra guard to avoid loops if skip-ci is ignored for any reason
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Determine semantic version bump
+        id: semver
+        run: |
+          set -e
+          echo "Analyzing commits for semantic version bump…"
+          # Try to detect major/minor/patch using Conventional Commits
+          BUMP=$(npx -y conventional-recommended-bump -p angular 2>/dev/null | grep -Eo '(major|minor|patch)' | head -n1 || true)
+          if [ -z "$BUMP" ]; then BUMP=patch; fi
+          echo "level=$BUMP" >> $GITHUB_OUTPUT
+          echo "Recommended bump: $BUMP"
+
+      - name: Bump version
+        id: bump
+        run: |
+          echo "Current version: $(node -p "require('./package.json').version")"
+          npm version ${{ steps.semver.outputs.level }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Commit and push version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json || true
+          git commit -m "chore: bump version to ${{ steps.bump.outputs.new }} [skip ci] [ci skip]" || echo "No changes to commit"
+          git push origin HEAD:${{ github.ref_name }} || echo "No changes to push"
+
+      - name: Resolve current commit SHA
+        id: rev
+        run: echo "sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Build
+        run: npm run build
+
+      - name: Package build artifact
+        run: |
+          mkdir -p dist
+          cp -R .next dist/.next
+          cp -R public dist/public
+          cp package.json package-lock.json next.config.mjs dist/
+          [ -f tsconfig.json ] && cp tsconfig.json dist/ || true
+          [ -f tailwind.config.ts ] && cp tailwind.config.ts dist/ || true
+          [ -f postcss.config.js ] && cp postcss.config.js dist/ || true
+          [ -f next-env.d.ts ] && cp next-env.d.ts dist/ || true
+          [ -f README.md ] && cp README.md dist/ || true
+          [ -f LICENSE ] && cp LICENSE dist/ || true
+          cd dist
+          zip -r ../pwa-${{ steps.bump.outputs.new }}.zip .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-${{ steps.bump.outputs.new }}
+          path: pwa-${{ steps.bump.outputs.new }}.zip
+
+      - name: Generate release notes (Conventional Commits)
+        run: |
+          npx -y conventional-changelog-cli -p angular -r 1 > RELEASE_NOTES.md || echo "Release notes unavailable" > RELEASE_NOTES.md
+
+      - name: Create GitHub Release and attach asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump.outputs.new }}
+          name: v${{ steps.bump.outputs.new }}
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: false
+          files: |
+            pwa-${{ steps.bump.outputs.new }}.zip
+          draft: false
+          prerelease: false
+          target_commitish: ${{ steps.rev.outputs.sha }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

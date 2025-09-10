@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="g06" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a7f3d0"/>
+      <stop offset="1" stop-color="#67e8f9"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#g06)"/>
+  <!-- waves -->
+  <g fill="#22d3ee" opacity="0.18">
+    <path d="M0 760 C200 720 300 800 500 760 C700 720 900 800 1100 760 C1300 720 1450 800 1600 760 V1000 H0 Z"/>
+    <path d="M0 820 C220 780 300 840 520 820 C760 800 880 860 1120 820 C1300 790 1450 860 1600 820 V1000 H0 Z" opacity="0.25"/>
+  </g>
+</svg>

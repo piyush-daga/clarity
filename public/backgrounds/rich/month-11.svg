@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+  <defs>
+    <linearGradient id="g11" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e0e7ff"/>
+      <stop offset="1" stop-color="#c7d2fe"/>
+    </linearGradient>
+    <g id="lantern" fill="#f59e0b" fill-opacity="0.22" stroke="#b45309" stroke-opacity="0.25" stroke-width="2">
+      <ellipse cx="0" cy="0" rx="20" ry="26"/>
+      <rect x="-6" y="-36" width="12" height="8" rx="2"/>
+      <line x1="0" y1="-28" x2="0" y2="-60" stroke="#b45309" stroke-opacity="0.25"/>
+    </g>
+  </defs>
+  <rect width="1600" height="1000" fill="url(#g11)"/>
+  <g>
+    <g transform="translate(300 200)"><use href="#lantern"/></g>
+    <g transform="translate(560 160) scale(1.2)"><use href="#lantern"/></g>
+    <g transform="translate(960 200)"><use href="#lantern"/></g>
+    <g transform="translate(1240 180) scale(0.9)"><use href="#lantern"/></g>
+  </g>
+  <g opacity="0.08" fill="#6366f1">
+    <path d="M0 840 H1600 V1000 H0z"/>
+  </g>
+</svg>
