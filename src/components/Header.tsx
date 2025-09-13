@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { CalendarDays, Settings, Plus, Search, Sun, Moon, Eye, EyeOff } from 'lucide-react';
 import React from 'react';
 import { useStore } from '@/store';
-import { applyTheme, resolveTheme } from '@/lib/theme';
+import { applyTheme } from '@/lib/theme';
 
 type Props = { onQuickAdd: () => void };
 
@@ -14,13 +14,20 @@ export default function Header({ onQuickAdd }: Props) {
   const hideDone = useStore((s) => s.hideDone);
   const toggleHideDone = useStore((s) => s.toggleHideDone);
   React.useEffect(() => {
-    setIsDark(resolveTheme() === 'dark');
-    const onChange = () => setIsDark(resolveTheme() === 'dark');
+    // Use the actual applied class on <html> as source of truth
+    const read = () => {
+      try { return document.documentElement.classList.contains('dark'); } catch { return false; }
+    };
+    setIsDark(read());
+    const onChange = () => setIsDark(read());
+    const onTheme = () => setIsDark(read());
     try {
       if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', onChange);
     } catch {}
+    window.addEventListener('clarity-theme-changed', onTheme as EventListener);
     return () => {
       try { if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', onChange); } catch {}
+      window.removeEventListener('clarity-theme-changed', onTheme as EventListener);
     };
   }, []);
 
@@ -50,7 +57,7 @@ export default function Header({ onQuickAdd }: Props) {
             {hideDone ? <Eye className="w-4 h-4"/> : <EyeOff className="w-4 h-4"/>}
           </button>
           <button className="btn btn-icon btn-ghost" aria-label="Toggle theme" title="Toggle theme"
-            onClick={() => { applyTheme('toggle'); setIsDark((d) => !d); }}>
+            onClick={() => { applyTheme('toggle'); try { setIsDark(document.documentElement.classList.contains('dark')); } catch {} }}>
             {isDark ? <Sun className="w-4 h-4"/> : <Moon className="w-4 h-4"/>}
           </button>
           <button className="btn btn-icon btn-primary" onClick={onQuickAdd} aria-label="Open Quick Add (Cmd/Ctrl+K)" title="Quick Add"><Plus className="w-4 h-4"/></button>

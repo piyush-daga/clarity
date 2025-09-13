@@ -16,11 +16,21 @@ Built with Next.js (App Router), React, TypeScript, Tailwind CSS, FullCalendar, 
 - Accessibility: Icon buttons have labels; calendar events include descriptive aria‑labels.
 
 ## Screenshots
-Place screenshots in `public/screenshots/` and update the paths below.
+Screenshots are available in `public/screenshots/` and linked below.
 
-![Overview](/screenshots/overview.png)
-![Board View](/screenshots/board.png)
-![Calendar View](/screenshots/calendar.png)
+### Calendar View
+
+| | |
+|---|---|
+| ![Calendar — Light mode](public/screenshots/light-board.png) | ![Calendar — Dark mode](public/screenshots/dark-board.png) |
+| Light mode | Dark mode |
+
+### Todo View
+
+| | |
+|---|---|
+| ![Todo — Light mode](public/screenshots/light-todo.png) | ![Todo — Dark mode](public/screenshots/dark-todo.png) |
+| Light mode | Dark mode |
 
 ## Getting Started
 
