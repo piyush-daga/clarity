@@ -17,8 +17,12 @@ export default function QuickAddProvider({ children }: { children: React.ReactNo
       const key = e.key.toLowerCase();
       if ((e.ctrlKey || e.metaKey) && key === 'k') {
         e.preventDefault();
-        setInitialText('');
-        setOpen(true);
+        // Toggle Quick Add on Cmd/Ctrl+K
+        setOpen((prev) => {
+          if (prev) return false; // close if already open
+          setInitialText('');
+          return true; // open otherwise
+        });
       }
       // Shift+D toggles hide done
       if (e.shiftKey && key === 'd') {

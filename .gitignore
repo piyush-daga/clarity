@@ -2,8 +2,7 @@
 node_modules
 
 # Next.js build output
-/.next/
-/.next/cache
+.next/
 /out/
 
 # Generic build outputs
@@ -16,10 +15,7 @@ node_modules
 
 # Environment files
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
 !.env.example
 
 # Platform/hosting
@@ -31,6 +27,7 @@ node_modules
 # Tooling caches
 .turbo
 .eslintcache
+.cache/
 
 # Logs
 *.log
@@ -39,11 +36,34 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+node-repl-history
+.node_repl_history
 
 # OS/Editor
 .DS_Store
 .idea/
 .vscode/
+*.iml
+.fleet/
+.direnv/
+*.swp
+*.swo
 
 # Coverage reports
 coverage/
+.nyc_output/
+
+# Temp files
+tmp/
+temp/
+
+# Package manager lockfiles (we use npm)
+yarn.lock
+pnpm-lock.yaml
+bun.lockb
+
+# Yarn Plug'n'Play
+.pnp.*
+
+# Archives
+*.tgz

@@ -61,7 +61,7 @@ export default function Header({ onQuickAdd }: Props) {
             {isDark ? <Sun className="w-4 h-4"/> : <Moon className="w-4 h-4"/>}
           </button>
           <button className="btn btn-icon btn-primary" onClick={onQuickAdd} aria-label="Open Quick Add (Cmd/Ctrl+K)" title="Quick Add"><Plus className="w-4 h-4"/></button>
-          <Link href="/settings" className="btn" aria-label="Settings"><Settings className="w-4 h-4"/>Settings</Link>
+          <Link href="/settings" className="btn btn-icon btn-ghost" aria-label="Settings" title="Settings"><Settings className="w-4 h-4"/></Link>
         </div>
       </div>
     </header>
