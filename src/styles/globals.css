@@ -366,6 +366,9 @@ input[type="time"].input::-webkit-calendar-picker-indicator { opacity: 0.7; filt
 
 /* Sizes */
 .checkbox-xl { width: 20px; height: 20px; }
+/* Larger size to match Title row height */
+.checkbox-2xl { width: 20px; height: 20px; }
+.checkbox-2xl::after { width: 12px; height: 6px; border-width: 3px; }
 
 /* Datetime inputs styling to match app */
 input[type="datetime-local"].input { appearance: none; }

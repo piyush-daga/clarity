@@ -21,7 +21,8 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
   const [local, setLocal] = useState<Task | undefined>(task);
   const [saving, setSaving] = useState<'idle'|'saving'|'saved'>('idle');
   const lastSaved = useRef<string>('');
-  useEffect(() => setLocal(task), [taskId, task]);
+  // Only reset local state when switching tasks; avoid overriding while typing
+  useEffect(() => setLocal(task), [taskId]);
 
   // initialize lastSaved signature when opening or task changes
   useEffect(() => {
@@ -62,9 +63,9 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
     const patch = sanitize(local);
     const sig = JSON.stringify(patch);
     if (sig === lastSaved.current) return;
-    setSaving('saving');
     const timer = setTimeout(async () => {
       try {
+        setSaving('saving');
         await updateTask(task.id, patch);
         lastSaved.current = sig;
         setSaving('saved');
@@ -72,7 +73,7 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
       } catch {
         setSaving('idle');
       }
-    }, 600);
+    }, 1500);
     return () => clearTimeout(timer);
   }, [open, task?.id, local, updateTask]);
 
@@ -188,26 +189,35 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
           <div className="py-24 text-center text-sm text-gray-500">Loading…</div>
         ) : (
         <div className="space-y-3">
-          {/* Title */}
+          {/* Title + Done inline */}
           <div>
             <label className="text-sm text-gray-600 dark:text-gray-300">Title</label>
-            <input
-              className="input mt-1"
-              value={local.title}
-              onChange={(e) => setLocal({ ...local, title: e.target.value })}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  try { (startTimeRef.current as HTMLInputElement | null)?.focus(); } catch {}
-                }
-              }}
-              onBlur={async () => { await updateTask(task.id, sanitize(local)); }}
-            />
+            <div className="mt-1 flex items-center gap-3">
+              <input
+                type="checkbox"
+                aria-label={local.checked ? 'Mark as not done' : 'Mark as done'}
+                title={local.checked ? 'Mark as not done' : 'Mark as done'}
+                className="checkbox-circle checkbox-xl"
+                checked={!!local.checked}
+                onChange={(e) => setLocal({ ...local, checked: e.target.checked, stage: e.target.checked ? 'done' : 'todo' })}
+                onBlur={async () => { await updateTask(task.id, sanitize(local)); }}
+              />
+              <input
+                className={`h-10 flex-1 px-3 rounded-2xl bg-transparent border-0 outline-none appearance-none ring-0 shadow-none placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:ring-1 hover:ring-gray-200 dark:hover:ring-slate-700 focus:ring-2 focus:ring-gray-300 dark:focus:ring-slate-600 transition-colors ${local.checked ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100'}`}
+                placeholder="Title"
+                value={local.title}
+                onChange={(e) => setLocal({ ...local, title: e.target.value })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    try { (startTimeRef.current as HTMLInputElement | null)?.focus(); } catch {}
+                  }
+                }}
+                onBlur={async () => { await updateTask(task.id, sanitize(local)); }}
+              />
+            </div>
           </div>
           <DescriptionEditor value={local.description ?? ''} onChange={(v) => setLocal({ ...local, description: v })} />
-          <div className="flex items-center gap-3">
-            <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="checkbox-circle checkbox-xl" checked={!!local.checked} onChange={(e) => setLocal({ ...local, checked: e.target.checked, stage: e.target.checked ? 'done' : 'todo' })} onBlur={async () => { await updateTask(task.id, sanitize(local)); }} />Done</label>
-          </div>
           <TimeRangeEditor task={local} setTask={setLocal} startRef={startTimeRef} />
           <div className="flex items-center gap-2">
             <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="checkbox-circle checkbox-xl" checked={!!local.allDay} onChange={(e) => setLocal({ ...local, allDay: e.target.checked })} onBlur={async () => { await updateTask(task.id, sanitize(local)); }} />All‑day</label>
@@ -343,26 +353,6 @@ function DescriptionEditor({ value, onChange }: { value: string; onChange: (v: s
     el.style.height = Math.min(280, Math.max(80, el.scrollHeight)).toString() + 'px';
   }, [value]);
 
-  // Lazy-load markdown renderer on client only via CDN to avoid bundler dependency
-  const [MD, setMD] = useState<null | ((props: any) => JSX.Element)>(null);
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const [{ default: ReactMarkdown }, { default: gfm }]: any = await Promise.all([
-          import('react-markdown'),
-          import('remark-gfm'),
-        ]);
-        if (active) {
-          const MarkdownRenderer = (props: any) => <ReactMarkdown remarkPlugins={[gfm]} {...props} />;
-          (MarkdownRenderer as any).displayName = 'MarkdownRenderer';
-          setMD(() => MarkdownRenderer);
-        }
-      } catch {}
-    })();
-    return () => { active = false; };
-  }, []);
-
   return (
     <div>
       <label className="text-sm text-gray-600 dark:text-gray-300">Description</label>
@@ -370,15 +360,10 @@ function DescriptionEditor({ value, onChange }: { value: string; onChange: (v: s
         ref={taRef}
         className="input mt-1 resize-none"
         rows={3}
-        placeholder="Write in Markdown…"
+        placeholder="Add details…"
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-      {MD && value.trim() && (
-        <div className="mt-2 p-3 rounded-xl border border-gray-200 dark:border-slate-700 bg-white/70 dark:bg-slate-800/60">
-          {MD ? <MD>{value}</MD> : null}
-        </div>
-      )}
     </div>
   );
 }
