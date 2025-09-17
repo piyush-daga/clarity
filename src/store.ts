@@ -112,6 +112,8 @@ export const useStore = create<State & Actions>((set, get) => ({
     const patch: Partial<Task> = { checked };
     if (checked) patch.stage = 'done';
     else if (!checked && t.stage === 'done') patch.stage = 'todo';
+    // manage completedAt timestamp
+    patch.completedAt = checked ? new Date().toISOString() : null;
     await get().updateTask(id, patch);
   },
 

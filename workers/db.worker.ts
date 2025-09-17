@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   description TEXT,
   stage TEXT NOT NULL CHECK(stage IN ('todo','in-progress','done')),
   checked INTEGER NOT NULL DEFAULT 0,
+  completedAt TEXT,
   start TEXT,
   end TEXT,
   allDay INTEGER,
@@ -89,6 +90,12 @@ self.onmessage = async (e: MessageEvent<Message>) => {
         // If legacy 'color' column exists, rebuild table without it
         try {
           const cols = dbi.exec({ sql: 'PRAGMA table_info(tasks);', returnValue: 'resultRows', rowMode: 'object' }) as any[];
+          // Add completedAt column if missing
+          const hasCompletedAt = Array.isArray(cols) && cols.some((r) => String((r as any).name || '') === 'completedAt');
+          if (!hasCompletedAt) {
+            try { dbi.exec('ALTER TABLE tasks ADD COLUMN completedAt TEXT;'); } catch {}
+            try { dbi.exec('CREATE INDEX IF NOT EXISTS idx_tasks_completedAt ON tasks(completedAt);'); } catch {}
+          }
           const hasColor = Array.isArray(cols) && cols.some((r) => String((r as any).name || '') === 'color');
           if (hasColor) {
             dbi.exec('BEGIN;');
@@ -99,6 +106,7 @@ CREATE TABLE IF NOT EXISTS tasks__new (
   description TEXT,
   stage TEXT NOT NULL CHECK(stage IN ('todo','in-progress','done')),
   checked INTEGER NOT NULL DEFAULT 0,
+  completedAt TEXT,
   start TEXT,
   end TEXT,
   allDay INTEGER,
@@ -113,18 +121,21 @@ CREATE TABLE IF NOT EXISTS tasks__new (
   sortOrder REAL NOT NULL DEFAULT 0
 );
 `);
-            dbi.exec(`INSERT INTO tasks__new (id,title,description,stage,checked,start,end,allDay,isEvent,hiddenOnCalendar,linkedTo,parentId,subTasks,createdAt,updatedAt,calendarId,sortOrder)
-SELECT id,title,description,stage,checked,start,end,allDay,isEvent,hiddenOnCalendar,linkedTo,parentId,subTasks,createdAt,updatedAt,calendarId,sortOrder FROM tasks;`);
+            dbi.exec(`INSERT INTO tasks__new (id,title,description,stage,checked,completedAt,start,end,allDay,isEvent,hiddenOnCalendar,linkedTo,parentId,subTasks,createdAt,updatedAt,calendarId,sortOrder)
+SELECT id,title,description,stage,checked,completedAt,start,end,allDay,isEvent,hiddenOnCalendar,linkedTo,parentId,subTasks,createdAt,updatedAt,calendarId,sortOrder FROM tasks;`);
             dbi.exec('DROP TABLE tasks;');
             dbi.exec('ALTER TABLE tasks__new RENAME TO tasks;');
             dbi.exec('CREATE INDEX IF NOT EXISTS idx_tasks_stage ON tasks(stage);');
             dbi.exec('CREATE INDEX IF NOT EXISTS idx_tasks_calendar ON tasks(calendarId);');
             dbi.exec('CREATE INDEX IF NOT EXISTS idx_tasks_time ON tasks(start, end);');
+            dbi.exec('CREATE INDEX IF NOT EXISTS idx_tasks_completedAt ON tasks(completedAt);');
             dbi.exec('COMMIT;');
           }
         } catch (_) {
           try { dbi.exec('ROLLBACK;'); } catch {}
         }
+        // Ensure index exists when no rebuild was needed and column already present
+        try { dbi.exec('CREATE INDEX IF NOT EXISTS idx_tasks_completedAt ON tasks(completedAt);'); } catch {}
         send({ id: msg.id, ok: true });
         break;
       }

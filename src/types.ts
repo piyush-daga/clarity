@@ -8,6 +8,7 @@ export interface Task {
   description?: string;
   stage: Stage;
   checked: boolean;
+  completedAt?: string;    // ISO when marked done
   start?: string;           // ISO
   end?: string;             // ISO
   allDay?: boolean;

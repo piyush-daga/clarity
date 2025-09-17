@@ -15,6 +15,7 @@ Built with Next.js (App Router), React, TypeScript, Tailwind CSS, FullCalendar, 
 - Theming: Light/Dark theme with automatic detection and persistent preference; dynamic background illustrations.
 - Accessibility: Icon buttons have labels; calendar events include descriptive aria‑labels.
 
+
 ## Screenshots
 Screenshots are available in `public/screenshots/` and linked below.
 

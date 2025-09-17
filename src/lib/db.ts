@@ -41,12 +41,26 @@ function call<T = unknown>(msg: WorkerMsg): Promise<T> {
 }
 
 async function ensureReady() {
-  if (ready) return;
-  const id1 = crypto.randomUUID();
-  await call({ id: id1, type: 'init' });
-  const id2 = crypto.randomUUID();
-  await call({ id: id2, type: 'migrate' });
-  ready = true;
+  if (!ready) {
+    const id1 = crypto.randomUUID();
+    await call({ id: id1, type: 'init' });
+    const id2 = crypto.randomUUID();
+    await call({ id: id2, type: 'migrate' });
+    ready = true;
+  } else {
+    // Verify critical migrations (e.g., 'completedAt') are applied even if this module
+    // was initialized before the code changed (dev HMR / long-lived session)
+    try {
+      const cols = await call<any[]>({ id: crypto.randomUUID(), type: 'all', sql: 'PRAGMA table_info(tasks);', params: [] });
+      const hasCompletedAt = Array.isArray(cols) && cols.some((r: any) => String(r.name || '') === 'completedAt');
+      if (!hasCompletedAt) {
+        await call({ id: crypto.randomUUID(), type: 'migrate' });
+      }
+    } catch {
+      // If PRAGMA fails for any reason, attempt a migrate
+      try { await call({ id: crypto.randomUUID(), type: 'migrate' }); } catch {}
+    }
+  }
 }
 
 // Utilities to marshal Task rows
@@ -57,6 +71,7 @@ function rowToTask(row: any): Task {
     description: row.description ?? undefined,
     stage: row.stage as Stage,
     checked: !!row.checked,
+    completedAt: row.completedAt ?? undefined,
     start: row.start ?? undefined,
     end: row.end ?? undefined,
     allDay: row.allDay != null ? !!row.allDay : undefined,
@@ -86,6 +101,7 @@ function taskToDB(task: Partial<Task>): { cols: string[]; vals: unknown[]; place
       case 'linkedTo': push('linkedTo', JSON.stringify(v)); break;
       case 'subTasks': push('subTasks', JSON.stringify(v)); break;
       case 'checked': push('checked', v ? 1 : 0); break;
+      case 'completedAt': push('completedAt', v as any); break;
       case 'allDay': push('allDay', v ? 1 : 0); break;
       case 'isEvent': push('isEvent', v ? 1 : 0); break;
       case 'hiddenOnCalendar': push('hiddenOnCalendar', v ? 1 : 0); break;
@@ -122,7 +138,17 @@ export const db = {
     }
     const sets = cols.map((c) => `${c} = ?`).join(',');
     const sql = `UPDATE tasks SET ${sets} WHERE id = ?`;
-    await call({ id: crypto.randomUUID(), type: 'run', sql, params: [...vals, id] });
+    try {
+      await call({ id: crypto.randomUUID(), type: 'run', sql, params: [...vals, id] });
+    } catch (err) {
+      const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+      if (msg.includes('no such column') && msg.includes('completedat')) {
+        try { await call({ id: crypto.randomUUID(), type: 'migrate' } as any); } catch {}
+        await call({ id: crypto.randomUUID(), type: 'run', sql, params: [...vals, id] });
+      } else {
+        throw err as Error;
+      }
+    }
     const rows = await call<any[]>({ id: crypto.randomUUID(), type: 'all', sql: 'SELECT * FROM tasks WHERE id = ?', params: [id] });
     return rowToTask(rows[0]);
   },
@@ -148,6 +174,57 @@ export const db = {
     await ensureReady();
     const rows = await call<any[]>({ id: crypto.randomUUID(), type: 'all', sql: 'SELECT * FROM tasks WHERE (start IS NULL OR end IS NULL) OR ((start <= ? AND end >= ?) OR (start >= ? AND start <= ?))', params: [to, from, from, to] });
     return rows.map(rowToTask);
+  },
+
+  async listCompletedInRange(from: string, to: string): Promise<Task[]> {
+    await ensureReady();
+    try {
+      const rows = await call<any[]>({
+        id: crypto.randomUUID(),
+        type: 'all',
+        sql: `
+          SELECT * FROM tasks
+          WHERE checked = 1 AND (
+            (completedAt IS NOT NULL AND completedAt >= ? AND completedAt <= ?)
+            OR (completedAt IS NULL AND updatedAt >= ? AND updatedAt <= ?)
+          )
+          ORDER BY COALESCE(completedAt, updatedAt) ASC
+        `,
+        params: [from, to, from, to],
+      });
+      return rows.map(rowToTask);
+    } catch (err) {
+      const msg = (err instanceof Error ? err.message : String(err)).toLowerCase();
+      if (msg.includes('no such column') && msg.includes('completedat')) {
+        // Attempt a migration and retry once
+        try { await call({ id: crypto.randomUUID(), type: 'migrate' } as any); } catch {}
+        try {
+          const rows = await call<any[]>({
+            id: crypto.randomUUID(),
+            type: 'all',
+            sql: `
+              SELECT * FROM tasks
+              WHERE checked = 1 AND (
+                (completedAt IS NOT NULL AND completedAt >= ? AND completedAt <= ?)
+                OR (completedAt IS NULL AND updatedAt >= ? AND updatedAt <= ?)
+              )
+              ORDER BY COALESCE(completedAt, updatedAt) ASC
+            `,
+            params: [from, to, from, to],
+          });
+          return rows.map(rowToTask);
+        } catch {}
+        // Fallback query without referencing completedAt
+        const rows = await call<any[]>({
+          id: crypto.randomUUID(),
+          type: 'all',
+          sql: 'SELECT * FROM tasks WHERE checked = 1 AND updatedAt >= ? AND updatedAt <= ? ORDER BY updatedAt ASC',
+          params: [from, to],
+        });
+        return rows.map(rowToTask);
+      }
+      throw err as Error;
+    }
   },
 
   async listCalendars(): Promise<CalendarSource[]> {
