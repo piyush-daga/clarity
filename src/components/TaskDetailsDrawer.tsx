@@ -172,7 +172,7 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
       {/* Right-side fixed panel */}
       <div
         ref={panelRef}
-        className="fixed right-0 top-0 h-screen w-full max-w-md card p-4 overflow-y-auto bg-white/90 dark:bg-slate-900/80 backdrop-blur"
+        className="fixed right-0 top-0 h-screen w-full max-w-md card border-0 p-4 overflow-y-auto bg-white/90 dark:bg-slate-900/80 backdrop-blur"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
       >
@@ -180,9 +180,9 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
           <h3 className="font-semibold">Task Details</h3>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500 min-w-[60px] text-right">{saving === 'saving' ? 'Saving…' : saving === 'saved' ? 'Saved' : ''}</span>
-            <button className="btn" aria-label="Duplicate task" title="Duplicate" onClick={duplicate}><Copy className="w-4 h-4" /></button>
-            <button className="btn text-red-600 hover:bg-red-50" aria-label="Delete task" title="Delete" onClick={remove}><Trash2 className="w-4 h-4" /></button>
-            <button className="btn" aria-label="Close" title="Close" onClick={closeWithAnimation}><X className="w-4 h-4" /></button>
+            <button className="btn border-transparent" aria-label="Duplicate task" title="Duplicate" onClick={duplicate}><Copy className="w-4 h-4" /></button>
+            <button className="btn border-transparent text-red-600 hover:bg-red-50" aria-label="Delete task" title="Delete" onClick={remove}><Trash2 className="w-4 h-4" /></button>
+            <button className="btn border-transparent" aria-label="Close" title="Close" onClick={closeWithAnimation}><X className="w-4 h-4" /></button>
           </div>
         </div>
         {!task || !local ? (
@@ -197,13 +197,13 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
                 type="checkbox"
                 aria-label={local.checked ? 'Mark as not done' : 'Mark as done'}
                 title={local.checked ? 'Mark as not done' : 'Mark as done'}
-                className="checkbox-circle checkbox-xl"
+                className="checkbox-circle checkbox-2xl"
                 checked={!!local.checked}
                 onChange={(e) => setLocal({ ...local, checked: e.target.checked, stage: e.target.checked ? 'done' : 'todo' })}
                 onBlur={async () => { await updateTask(task.id, sanitize(local)); }}
               />
               <input
-                className={`h-10 flex-1 px-3 rounded-2xl bg-transparent border-0 outline-none appearance-none ring-0 shadow-none placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:ring-1 hover:ring-gray-200 dark:hover:ring-slate-700 focus:ring-2 focus:ring-gray-300 dark:focus:ring-slate-600 transition-colors ${local.checked ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100'}`}
+                className={`h-10 flex-1 px-3 rounded-2xl bg-transparent border-0 outline-none appearance-none ring-0 shadow-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-gray-300 dark:focus-visible:ring-slate-600 transition-colors ${local.checked ? 'line-through text-gray-400' : 'text-gray-900 dark:text-gray-100'}`}
                 placeholder="Title"
                 value={local.title}
                 onChange={(e) => setLocal({ ...local, title: e.target.value })}
@@ -284,11 +284,11 @@ function TimeRangeEditor({ task, setTask, startRef }: { task: Task; setTask: (t:
   return (
     <div>
       <label className="text-sm text-gray-600 dark:text-gray-300">When</label>
-      <div className="mt-1 flex items-center gap-2">
+      <div className="mt-1 flex items-center gap-5">
         <input
           type="time"
           step={60}
-          className="input h-10 w-28 text-center"
+          className="h-10 w-28 text-center rounded-2xl bg-transparent border-0 outline-none appearance-none ring-0 shadow-none focus-visible:ring-2 focus-visible:ring-gray-300 dark:focus-visible:ring-slate-600"
           disabled={!!task.allDay}
           value={startTime}
           ref={startRef as any}
@@ -298,7 +298,7 @@ function TimeRangeEditor({ task, setTask, startRef }: { task: Task; setTask: (t:
         <input
           type="time"
           step={60}
-          className={`input h-10 w-28 text-center ${invalid ? 'opacity-60' : ''}`}
+          className={`h-10 w-28 text-center rounded-2xl bg-transparent border-0 outline-none appearance-none ring-0 shadow-none focus-visible:ring-2 focus-visible:ring-gray-300 dark:focus-visible:ring-slate-600 ${invalid ? 'opacity-60' : ''}`}
           disabled={!!task.allDay}
           value={endTime}
           onChange={onTime('end')}
@@ -358,7 +358,7 @@ function DescriptionEditor({ value, onChange }: { value: string; onChange: (v: s
       <label className="text-sm text-gray-600 dark:text-gray-300">Description</label>
       <textarea
         ref={taRef}
-        className="input mt-1 resize-none"
+        className="mt-1 resize-none h-24 w-full px-3 py-2 rounded-2xl bg-transparent border-0 outline-none ring-0 shadow-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-gray-300 dark:focus-visible:ring-slate-600"
         rows={3}
         placeholder="Add details…"
         value={value}
@@ -479,7 +479,7 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
         <div className="text-sm text-gray-600 dark:text-gray-300">Subtasks</div>
         <div className="flex items-center gap-2">
           <button
-            className="btn h-9 w-9 p-0 inline-flex items-center justify-center"
+            className="btn border-transparent h-9 w-9 p-0 inline-flex items-center justify-center"
             aria-label="Generate subtasks"
             title="Generate subtasks from title & description"
             onClick={async () => {
@@ -526,7 +526,7 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
           >
             {genState === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
           </button>
-          <button className="btn h-9 w-9 p-0 inline-flex items-center justify-center" aria-label="Add subtask" title="Add subtask" onClick={add}>
+          <button className="btn border-transparent h-9 w-9 p-0 inline-flex items-center justify-center" aria-label="Add subtask" title="Add subtask" onClick={add}>
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -544,7 +544,7 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
                 onChange={(e) => update(st.id, { done: e.target.checked })}
               />
               <input
-                className={`input flex-1 ${strike}`}
+                className={`h-9 flex-1 px-3 rounded-xl bg-transparent border-0 outline-none appearance-none ring-0 shadow-none placeholder:text-gray-400 dark:placeholder:text-gray-500 focus-visible:ring-2 focus-visible:ring-gray-300 dark:focus-visible:ring-slate-600 ${strike}`}
                 value={st.title}
                 onChange={(e) => update(st.id, { title: e.target.value })}
                 onKeyDown={(e) => {
@@ -554,7 +554,7 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
                   }
                 }}
               />
-              <button className="btn h-9 w-9 p-0 inline-flex items-center justify-center" aria-label="Delete subtask" title="Delete subtask" onClick={() => remove(st.id)}>
+              <button className="btn border-transparent h-9 w-9 p-0 inline-flex items-center justify-center" aria-label="Delete subtask" title="Delete subtask" onClick={() => remove(st.id)}>
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
