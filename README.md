@@ -16,9 +16,15 @@ Built with Next.js (App Router), React, TypeScript, Tailwind CSS, FullCalendar, 
 - Accessibility: Icon buttons have labels; calendar events include descriptive aria‑labels.
 
 ## AI Setup (optional)
-- Models: Choose Gemini models in Settings. Default is "Gemini 2.5 Flash (free)".
+- Models: Choose Gemini models in Settings. Default is `Gemini 2.5 Flash (free)`.
 - API key: In Settings → AI, paste your Gemini API key (from https://aistudio.google.com/app/apikey). The key is stored locally in your browser, masked, and not shown again.
-- Usage: This only sets up configuration. We’ll wire AI features into the app in follow‑up steps.
+- Test: Use the "Test" button in Settings to verify connectivity.
+
+### AI Subtasks in Task Details
+- Open any task. Click the lightning icon next to the "+" in the Subtasks header to auto‑generate subtasks from the title and description.
+- The generator infers sensible steps even from brief descriptions and avoids adding duplicates.
+- Requires a Gemini API key in Settings → AI.
+
 
 
 ## Screenshots

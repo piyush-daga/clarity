@@ -4,7 +4,9 @@ import { createPortal } from 'react-dom';
 import { useStore } from '@/store';
 import { toast } from '@/lib/toast';
 import { Task, SubTask, Stage } from '@/types';
-import { Trash2, Copy, X, Plus } from 'lucide-react';
+import { Trash2, Copy, X, Plus, Zap, Loader2 } from 'lucide-react';
+import { SUBTASKS_SYSTEM_PROMPT } from '@/lib/prompts';
+import { LS_AI_KEY, LS_AI_MODEL, DEFAULT_MODEL_ID } from '@/lib/ai';
 
 type Props = { open: boolean; taskId?: string | null; onClose: () => void };
 
@@ -234,6 +236,8 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
   return overlay;
 }
 
+// Removed the previous AI Subtasks pane; generation is now a single lightning button next to "+" in Subtasks.
+
 function TimeRangeEditor({ task, setTask, startRef }: { task: Task; setTask: (t: Task) => void; startRef?: React.RefObject<HTMLInputElement | null> }) {
   const update = (patch: Partial<Task>) => setTask({ ...task, ...patch });
   const startTime = toLocalTime(task.start);
@@ -305,6 +309,30 @@ function TimeRangeEditor({ task, setTask, startRef }: { task: Task; setTask: (t:
   );
 }
 
+function looseParseJSON(s: string): any | null {
+  try { return JSON.parse(s); } catch {}
+  try {
+    const start = s.indexOf('{');
+    const end = s.lastIndexOf('}');
+    if (start >= 0 && end > start) return JSON.parse(s.slice(start, end + 1));
+  } catch {}
+  return null;
+}
+
+function normalizeSubtaskList(parsed: any): string[] {
+  if (!parsed) return [];
+  const arr = Array.isArray(parsed) ? parsed : Array.isArray(parsed.subtasks) ? parsed.subtasks : [];
+  const titles = arr.map((x: any) => typeof x === 'string' ? x : (x && typeof x.title === 'string' ? x.title : '')).filter((s: string) => typeof s === 'string' && s.trim().length > 0);
+  // Deduplicate while preserving order
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const t of titles) {
+    const key = t.trim().toLowerCase();
+    if (!seen.has(key)) { seen.add(key); out.push(t); }
+  }
+  return out.slice(0, 12);
+}
+
 function DescriptionEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const taRef = useRef<HTMLTextAreaElement | null>(null);
   // autosize textarea height
@@ -358,6 +386,7 @@ function DescriptionEditor({ value, onChange }: { value: string; onChange: (v: s
 function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => void }) {
   const saveSubtasks = useStore((s) => s.updateTask);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const [genState, setGenState] = useState<'idle'|'loading'>('idle');
 
   function measurePositions(): Map<string, number> {
     const map = new Map<string, number>();
@@ -463,9 +492,59 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
     <div>
       <div className="flex items-center justify-between">
         <div className="text-sm text-gray-600 dark:text-gray-300">Subtasks</div>
-        <button className="btn h-9 w-9 p-0 inline-flex items-center justify-center" aria-label="Add subtask" title="Add subtask" onClick={add}>
-          <Plus className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            className="btn h-9 w-9 p-0 inline-flex items-center justify-center"
+            aria-label="Generate subtasks"
+            title="Generate subtasks from title & description"
+            onClick={async () => {
+              if (genState === 'loading') return;
+              const hasKey = (()=>{ try { return !!localStorage.getItem(LS_AI_KEY); } catch { return false; } })();
+              if (!hasKey) { toast('Add your Gemini API key in Settings'); return; }
+              try {
+                setGenState('loading');
+                const apiKey = (()=>{ try { return localStorage.getItem(LS_AI_KEY) || ''; } catch { return ''; } })();
+                const model = (()=>{ try { return localStorage.getItem(LS_AI_MODEL) || DEFAULT_MODEL_ID; } catch { return DEFAULT_MODEL_ID; } })();
+                const existing = (task.subTasks || []).map(s => s.title).filter(Boolean);
+                const sys = SUBTASKS_SYSTEM_PROMPT;
+                const user = `parent_title: ${task.title}\nparent_description: ${task.description || '(none)'}\nexisting_subtasks: ${JSON.stringify(existing)}\nmax_subtasks: 8`;
+                const resp = await fetch('/api/ai/chat', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ model, apiKey, messages: [
+                    { role: 'system', content: sys },
+                    { role: 'user', content: user },
+                  ] }),
+                });
+                const data = await resp.json();
+                if (!data?.ok) throw new Error(data?.error || 'AI request failed');
+                const parsed = looseParseJSON(String(data.content || ''));
+                const arr: string[] = normalizeSubtaskList(parsed);
+                if (!arr.length) { toast('No new subtasks suggested'); return; }
+                const existingLC = new Set((task.subTasks || []).map(s => s.title.trim().toLowerCase()));
+                const toAdd = arr
+                  .map(t => t.trim())
+                  .filter(Boolean)
+                  .filter(t => !existingLC.has(t.toLowerCase()));
+                if (!toAdd.length) { toast('All suggested subtasks already exist'); return; }
+                const next = [...(task.subTasks || [])];
+                for (const title of toAdd) next.push({ id: crypto.randomUUID(), title, done: false });
+                setTask({ ...task, subTasks: next });
+                void saveSubtasks(task.id, { subTasks: next });
+                toast(`Added ${toAdd.length} subtasks`);
+              } catch (e) {
+                toast((e as Error).message || 'Generation failed');
+              } finally {
+                setGenState('idle');
+              }
+            }}
+          >
+            {genState === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
+          </button>
+          <button className="btn h-9 w-9 p-0 inline-flex items-center justify-center" aria-label="Add subtask" title="Add subtask" onClick={add}>
+            <Plus className="w-4 h-4" />
+          </button>
+        </div>
       </div>
       <div className="space-y-2 mt-2" ref={listRef}>
         {(task.subTasks ?? []).map((st) => {
