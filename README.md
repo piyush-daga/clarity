@@ -15,6 +15,11 @@ Built with Next.js (App Router), React, TypeScript, Tailwind CSS, FullCalendar, 
 - Theming: Light/Dark theme with automatic detection and persistent preference; dynamic background illustrations.
 - Accessibility: Icon buttons have labels; calendar events include descriptive aria‑labels.
 
+## AI Setup (optional)
+- Models: Choose Gemini models in Settings. Default is "Gemini 2.5 Flash (free)".
+- API key: In Settings → AI, paste your Gemini API key (from https://aistudio.google.com/app/apikey). The key is stored locally in your browser, masked, and not shown again.
+- Usage: This only sets up configuration. We’ll wire AI features into the app in follow‑up steps.
+
 
 ## Screenshots
 Screenshots are available in `public/screenshots/` and linked below.
