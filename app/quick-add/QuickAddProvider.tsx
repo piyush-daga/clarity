@@ -9,6 +9,7 @@ import { registerQuickAddOpen } from '@/lib/quickAdd';
 export default function QuickAddProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [initialText, setInitialText] = useState('');
+  const [initialMode, setInitialMode] = useState<'quick'|'notes'>('quick');
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -19,13 +20,15 @@ export default function QuickAddProvider({ children }: { children: React.ReactNo
         setOpen((prev) => {
           if (prev) return false; // close if already open
           setInitialText('');
+          setInitialMode('quick');
           return true; // open otherwise
         });
       }
     };
     window.addEventListener('keydown', onKey);
-    registerQuickAddOpen((prefill) => {
+    registerQuickAddOpen((prefill, options) => {
       setInitialText(prefill ?? '');
+      setInitialMode(options?.mode || 'quick');
       setOpen(true);
     });
     return () => {
@@ -40,9 +43,9 @@ export default function QuickAddProvider({ children }: { children: React.ReactNo
 
   return (
     <>
-      <Header onQuickAdd={() => { setInitialText(''); setOpen(true); }} />
+      <Header onQuickAdd={() => { setInitialText(''); setInitialMode('quick'); setOpen(true); }} />
       {children}
-      <QuickAdd open={open} initialText={initialText} onClose={() => setOpen(false)} />
+      <QuickAdd open={open} initialText={initialText} initialMode={initialMode} onClose={() => setOpen(false)} />
     </>
   );
 }

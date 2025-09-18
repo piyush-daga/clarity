@@ -1,4 +1,4 @@
-export type QuickAddOpen = (prefill?: string) => void;
+export type QuickAddOpen = (prefill?: string, options?: { mode?: 'quick'|'notes' }) => void;
 
 let opener: QuickAddOpen | null = null;
 
@@ -6,7 +6,6 @@ export function registerQuickAddOpen(fn: QuickAddOpen) {
   opener = fn;
 }
 
-export function openQuickAdd(prefill?: string) {
-  if (opener) opener(prefill);
+export function openQuickAdd(prefill?: string, options?: { mode?: 'quick'|'notes' }) {
+  if (opener) opener(prefill, options);
 }
-

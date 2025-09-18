@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
     }));
 
     const payload: any = { contents };
-    if (sys) payload.systemInstruction = { role: 'user', parts: [{ text: sys.content }] };
+    // Gemini REST expects `system_instruction` (snake_case), not camelCase
+    if (sys) payload.system_instruction = { parts: [{ text: sys.content }] };
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(apiKey)}`;
     const resp = await fetch(url, {
@@ -47,4 +48,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: msg || 'Unhandled error' }, { status: 500 });
   }
 }
-

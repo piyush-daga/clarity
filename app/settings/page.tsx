@@ -4,7 +4,7 @@ import ExportModal from '@/components/ExportModal';
 import { useStore } from '@/store';
 import { toast } from '@/lib/toast';
 import { isGoogleEnabled } from '@/lib/google';
-import { AI_MODEL_OPTIONS, DEFAULT_MODEL_ID, LS_AI_KEY, LS_AI_MODEL } from '@/lib/ai';
+import { AI_MODEL_OPTIONS, DEFAULT_MODEL_ID, LS_AI_KEY, getStoredAIModel, setStoredAIModel } from '@/lib/ai';
 import { Bot, Key, Database, Upload, Download, CalendarDays, Plug, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 
 export default function SettingsPage() {
@@ -20,15 +20,10 @@ export default function SettingsPage() {
 
   useEffect(() => {
     try {
-      const m = localStorage.getItem(LS_AI_MODEL) || DEFAULT_MODEL_ID;
-      setModelId(m);
+      setModelId(getStoredAIModel());
       setHasKey(!!localStorage.getItem(LS_AI_KEY));
     } catch {}
   }, []);
-
-  useEffect(() => {
-    try { localStorage.setItem(LS_AI_MODEL, modelId); } catch {}
-  }, [modelId]);
 
   const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -99,7 +94,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <label className="flex flex-col gap-1">
               <span className="text-sm text-gray-600 dark:text-gray-300 flex items-center gap-2"><Bot className="w-3.5 h-3.5" /> Model</span>
-              <select className="input" value={modelId} onChange={(e)=>setModelId(e.target.value)}>
+              <select className="input" value={modelId} onChange={(e)=>{ const id = e.target.value; setModelId(id); try { setStoredAIModel(id); } catch {} }}>
                 {AI_MODEL_OPTIONS.map(opt => (
                   <option key={opt.id} value={opt.id}>{opt.label}</option>
                 ))}

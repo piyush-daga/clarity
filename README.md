@@ -8,6 +8,7 @@ Built with Next.js (App Router), React, TypeScript, Tailwind CSS, FullCalendar, 
 - Local‑first data: SQLite Wasm via a Web Worker with OPFS for persistent storage; automatic in‑memory fallback if OPFS isn’t available.
 - Calendar + Board: FullCalendar view with drag/resize; Kanban board with Yesterday/Today/Tomorrow/Overdue columns and drag‑and‑drop between columns.
 - Quick Add: Cmd/Ctrl+K opens a natural‑language quick add (e.g., "Design review" tomorrow 2 PM !event).
+- Draft from Notes: Paste freeform notes, preview detected tasks/events/subtasks in a modal, edit details, then create them in one shot (uses Gemini; preview required before creation).
 - Keyboard friendly: Quick Add (Cmd/Ctrl+K), close dialogs (Esc), toggle done on a task card (Space), create follow‑up (L).
 - Search + Filters: Instant search, + “hide done” toggle.
 - Import/Export: Export as ICS (VEVENT/VTODO) or CSV; import tasks from CSV.
@@ -16,13 +17,19 @@ Built with Next.js (App Router), React, TypeScript, Tailwind CSS, FullCalendar, 
 - Accessibility: Icon buttons have labels; calendar events include descriptive aria‑labels.
 
 ## AI Setup (optional)
-- Models: Choose Gemini models in Settings. Default is `Gemini 2.5 Flash (free)`.
+- Models: Choose Gemini models in Settings. Default is `Gemini 2.5 Flash`.
 - API key: In Settings → AI, paste your Gemini API key (from https://aistudio.google.com/app/apikey). The key is stored locally in your browser, masked, and not shown again.
 - Test: Use the "Test" button in Settings to verify connectivity.
 
 ### AI Subtasks in Task Details
 - Open any task. Click the lightning icon next to the "+" in the Subtasks header to auto‑generate subtasks from the title and description.
 - The generator infers sensible steps even from brief descriptions and avoids adding duplicates.
+- Requires a Gemini API key in Settings → AI.
+
+### Draft from Notes (AI)
+- Click the File icon in the header to open Draft from Notes.
+- Paste meeting notes or a scratch list; click Preview.
+- Review and edit the extracted tasks and events in the modal, then Create.
 - Requires a Gemini API key in Settings → AI.
 
 

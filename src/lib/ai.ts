@@ -8,7 +8,7 @@ export type AIModelOption = {
 };
 
 export const AI_MODEL_OPTIONS: AIModelOption[] = [
-  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash (free)', provider: 'gemini', isDefault: true },
+  { id: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', provider: 'gemini', isDefault: true },
   { id: 'gemini-1.5-flash', label: 'Gemini 1.5 Flash', provider: 'gemini' },
   { id: 'gemini-1.5-pro', label: 'Gemini 1.5 Pro', provider: 'gemini' },
 ];
