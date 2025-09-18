@@ -374,3 +374,47 @@ input[type="time"].input::-webkit-calendar-picker-indicator { opacity: 0.7; filt
 input[type="datetime-local"].input { appearance: none; }
 input[type="datetime-local"].input::-webkit-calendar-picker-indicator { opacity: 0.7; filter: invert(0.2); }
 .dark input[type="datetime-local"].input::-webkit-calendar-picker-indicator { filter: invert(0.85); opacity: 0.8; }
+
+/* Quick Add detected token chips */
+.qa-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 500;
+  line-height: 1.2;
+  border: 1px solid transparent;
+}
+.qa-chip-time { background: rgba(59,130,246,0.12); color: #1d4ed8; border-color: rgba(59,130,246,0.25); }
+.qa-chip-date { background: rgba(16,185,129,0.12); color: #047857; border-color: rgba(16,185,129,0.25); }
+.qa-chip-datetime { background: rgba(168,85,247,0.12); color: #6d28d9; border-color: rgba(168,85,247,0.25); }
+.dark .qa-chip-time { background: rgba(59,130,246,0.18); color: #93c5fd; border-color: rgba(59,130,246,0.35); }
+.dark .qa-chip-date { background: rgba(16,185,129,0.18); color: #6ee7b7; border-color: rgba(16,185,129,0.35); }
+.dark .qa-chip-datetime { background: rgba(168,85,247,0.18); color: #d8b4fe; border-color: rgba(168,85,247,0.35); }
+
+/* Inline highlights overlay for Quick Add */
+.qa-inline-layer {
+  color: transparent; /* hide overlay text (input shows real text) */
+  font: inherit;      /* match input font metrics */
+}
+.qa-inline { border-radius: 4px; }
+.qa-inline-time { background: rgba(59,130,246,0.22); }
+.qa-inline-date { background: rgba(16,185,129,0.22); }
+.qa-inline-datetime { background: rgba(168,85,247,0.22); }
+.dark .qa-inline-time { background: rgba(59,130,246,0.30); }
+.dark .qa-inline-date { background: rgba(16,185,129,0.30); }
+.dark .qa-inline-datetime { background: rgba(168,85,247,0.30); }
+
+/* Blink border around newly generated subtasks */
+@keyframes subtaskBorderBlink {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(96,165,250,0); }
+  18% { box-shadow: 0 0 0 1.5px rgba(96,165,250,0.55); }
+  38% { box-shadow: 0 0 0 0 rgba(96,165,250,0); }
+  65% { box-shadow: 0 0 0 1.5px rgba(96,165,250,0.55); }
+}
+
+.subtask-new-flash {
+  animation: subtaskBorderBlink 2.2s ease-in-out 1;
+  border-radius: 12px; /* match input rounding */
+}

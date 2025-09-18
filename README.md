@@ -8,7 +8,7 @@ Built with Next.js (App Router), React, TypeScript, Tailwind CSS, FullCalendar, 
 - Local‑first data: SQLite Wasm via a Web Worker with OPFS for persistent storage; automatic in‑memory fallback if OPFS isn’t available.
 - Calendar + Board: FullCalendar view with drag/resize; Kanban board with Yesterday/Today/Tomorrow/Overdue columns and drag‑and‑drop between columns.
 - Quick Add: Cmd/Ctrl+K opens a natural‑language quick add (e.g., "Design review" tomorrow 2 PM !event).
-- Keyboard friendly: Quick Add (Cmd/Ctrl+K), close dialogs (Esc), toggle done on a task card (Space), create follow‑up (L), toggle hide‑done (Shift+D).
+- Keyboard friendly: Quick Add (Cmd/Ctrl+K), close dialogs (Esc), toggle done on a task card (Space), create follow‑up (L).
 - Search + Filters: Instant search, + “hide done” toggle.
 - Import/Export: Export as ICS (VEVENT/VTODO) or CSV; import tasks from CSV.
 - PWA: Installable, offline‑capable; update notification when a new version is available.
@@ -86,7 +86,6 @@ Useful scripts
 - Esc: Close dialogs
 - Space (focused task card): Toggle done
 - L (focused task card): Create follow‑up task
-- Shift+D: Toggle “hide done”
 
 ## Data & Privacy
 - Storage: All data is stored locally in your browser. When OPFS is supported, the database is persisted at `/clarity/main.sqlite3`; otherwise a transient in‑memory fallback is used.

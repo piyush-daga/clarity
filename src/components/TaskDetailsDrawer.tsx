@@ -426,6 +426,11 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
     void saveSubtasks(task.id, { subTasks: list });
     requestAnimationFrame(() => {
       animateFrom(prev);
+      const el = listRef.current?.querySelector(`[data-subtask-id="${newId}"]`) as HTMLElement | null;
+      if (el) {
+        el.classList.add('subtask-new-flash');
+        window.setTimeout(() => el.classList.remove('subtask-new-flash'), 2400);
+      }
       setTimeout(() => {
         const input = listRef.current?.querySelector(`[data-subtask-id="${newId}"] input[type="text"]`) as HTMLInputElement | null;
         input?.focus();
@@ -444,12 +449,20 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
     list[idx] = { ...cur, title: '' };
     setTask({ ...task, subTasks: list });
     void saveSubtasks(task.id, { subTasks: list });
-    requestAnimationFrame(() => animateFrom(prev));
+    requestAnimationFrame(() => {
+      animateFrom(prev);
+      const el = listRef.current?.querySelector(`[data-subtask-id="${moved.id}"]`) as HTMLElement | null;
+      if (el) {
+        el.classList.add('subtask-new-flash');
+        window.setTimeout(() => el.classList.remove('subtask-new-flash'), 2400);
+      }
+    });
   };
 
   const add = () => {
     const prev = measurePositions();
-    const list: SubTask[] = [...(task.subTasks ?? []), { id: crypto.randomUUID(), title: '', done: false }];
+    const newId = crypto.randomUUID();
+    const list: SubTask[] = [...(task.subTasks ?? []), { id: newId, title: '', done: false }];
     setTask({ ...task, subTasks: list });
     void saveSubtasks(task.id, { subTasks: list });
     requestAnimationFrame(() => animateFrom(prev));
@@ -488,6 +501,7 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
               if (!hasKey) { toast('Add your Gemini API key in Settings'); return; }
               try {
                 setGenState('loading');
+                const prev = measurePositions();
                 const apiKey = (()=>{ try { return localStorage.getItem(LS_AI_KEY) || ''; } catch { return ''; } })();
                 const model = (()=>{ try { return localStorage.getItem(LS_AI_MODEL) || DEFAULT_MODEL_ID; } catch { return DEFAULT_MODEL_ID; } })();
                 const existing = (task.subTasks || []).map(s => s.title).filter(Boolean);
@@ -513,9 +527,26 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
                   .filter(t => !existingLC.has(t.toLowerCase()));
                 if (!toAdd.length) { toast('All suggested subtasks already exist'); return; }
                 const next = [...(task.subTasks || [])];
-                for (const title of toAdd) next.push({ id: crypto.randomUUID(), title, done: false });
+                const addedIds: string[] = [];
+                for (const title of toAdd) {
+                  const id = crypto.randomUUID();
+                  addedIds.push(id);
+                  next.push({ id, title, done: false });
+                }
                 setTask({ ...task, subTasks: next });
                 void saveSubtasks(task.id, { subTasks: next });
+                requestAnimationFrame(() => {
+                  // Run existing FLIP/fade for new items
+                  animateFrom(prev);
+                  // Add a brief border blink on newly added subtasks
+                  addedIds.forEach((id) => {
+                    const el = listRef.current?.querySelector(`[data-subtask-id="${id}"]`) as HTMLElement | null;
+                    if (el) {
+                      el.classList.add('subtask-new-flash');
+                      window.setTimeout(() => el.classList.remove('subtask-new-flash'), 2400);
+                    }
+                  });
+                });
                 toast(`Added ${toAdd.length} subtasks`);
               } catch (e) {
                 toast((e as Error).message || 'Generation failed');

@@ -53,7 +53,7 @@ export default function Header({ onQuickAdd }: Props) {
               onBlur={() => setFocused(false)}
             />
           </div>
-          <button className="btn btn-icon btn-ghost" aria-label={hideDone ? 'Show done' : 'Hide done'} title={hideDone ? 'Show Done (Shift+D)' : 'Hide Done (Shift+D)'} onClick={toggleHideDone}>
+          <button className="btn btn-icon btn-ghost" aria-label={hideDone ? 'Show done' : 'Hide done'} title={hideDone ? 'Show Done' : 'Hide Done'} onClick={toggleHideDone}>
             {hideDone ? <Eye className="w-4 h-4"/> : <EyeOff className="w-4 h-4"/>}
           </button>
           <button className="btn btn-icon btn-ghost" aria-label="Toggle theme" title="Toggle theme"

@@ -5,13 +5,11 @@ import { useEffect, useState } from 'react';
 import { setupSWClient } from '@/lib/sw-client';
 import { toast } from '@/lib/toast';
 import { registerQuickAddOpen } from '@/lib/quickAdd';
-import { useStore } from '@/store';
 
 export default function QuickAddProvider({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [initialText, setInitialText] = useState('');
 
-  const toggleHideDone = useStore((s) => s.toggleHideDone);
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const key = e.key.toLowerCase();
@@ -23,11 +21,6 @@ export default function QuickAddProvider({ children }: { children: React.ReactNo
           setInitialText('');
           return true; // open otherwise
         });
-      }
-      // Shift+D toggles hide done
-      if (e.shiftKey && key === 'd') {
-        e.preventDefault();
-        toggleHideDone();
       }
     };
     window.addEventListener('keydown', onKey);
