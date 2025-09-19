@@ -16,10 +16,12 @@ export default function TaskBoard() {
   const hideDone = useStore((s) => s.hideDone);
   const toggleChecked = useStore((s) => s.toggleChecked);
   const updateTask = useStore((s) => s.updateTask);
+  const addRange = useStore((s) => s.addRange);
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTask, setDrawerTask] = useState<string | null>(null);
   const [overdueAsc, setOverdueAsc] = useState(false);
+  const [drawerHighlightRangeId, setDrawerHighlightRangeId] = useState<string | undefined>(undefined);
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
 
   const openDrawer = (id: string) => { setDrawerTask(id); setDrawerOpen(true); };
@@ -29,10 +31,12 @@ export default function TaskBoard() {
       // handled in parent page via store action
     };
     const onOpen = (e: Event) => {
-      const id = (e as CustomEvent<{ id: string }>).detail?.id;
+      const detail = (e as CustomEvent<{ id: string; rangeId?: string }>).detail;
+      const id = detail?.id;
       if (id) {
         setDrawerTask(id);
         setDrawerOpen(true);
+        setDrawerHighlightRangeId(detail?.rangeId);
       }
     };
     window.addEventListener('create-followup', onFollow);
@@ -113,7 +117,9 @@ export default function TaskBoard() {
           startISO = s.toISOString();
           endISO = e.toISOString();
         }
-        await updateTask(activeId, { start: startISO, end: endISO });
+        if (startISO && endISO) {
+          await addRange(activeId, { start: startISO, end: endISO, allDay: !!task.allDay });
+        }
       }}>
         <Column tone="yellow" id="yesterday" title="Yesterday" icon={<Sunset className="w-4 h-4"/>} items={yesterday} onOpen={openDrawer} onToggle={toggleChecked} />
         <Column tone="blue" id="today" title="Today" icon={<Sun className="w-4 h-4"/>} items={today} onOpen={openDrawer} onToggle={toggleChecked}
@@ -125,7 +131,7 @@ export default function TaskBoard() {
             return cmp;
           })} onOpen={openDrawer} onToggle={toggleChecked}
           headerRight={<button className="btn btn-icon" aria-label="Toggle sort" title={overdueAsc ? 'Ascending' : 'Descending'} onClick={() => setOverdueAsc((v)=>!v)}><ArrowUpDown className="w-4 h-4"/></button>} />
-        <TaskDetailsDrawer open={drawerOpen} taskId={drawerTask} onClose={() => setDrawerOpen(false)} />
+        <TaskDetailsDrawer open={drawerOpen} taskId={drawerTask} highlightRangeId={drawerHighlightRangeId} onClose={() => { setDrawerOpen(false); setDrawerHighlightRangeId(undefined); }} />
       </DndContext>
     </div>
   );

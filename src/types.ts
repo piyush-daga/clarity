@@ -17,6 +17,8 @@ export interface Task {
   linkedTo?: string[];      // bidirectional links
   parentId?: string | null; // original task if follow-up
   subTasks?: SubTask[];
+  // Multiple scheduled ranges for timeline (optional; falls back to start/end)
+  ranges?: TaskRange[];
   createdAt: string;        // ISO
   updatedAt: string;        // ISO
   calendarId: string;       // FK to CalendarSource.id
@@ -34,4 +36,15 @@ export interface CalendarSource {
 export interface ExportRange {
   from: string; // ISO date/datetime
   to: string;   // ISO date/datetime
+}
+
+// A discrete scheduled span for a task
+export interface TaskRange {
+  id: string;
+  taskId: string;
+  start: string; // ISO
+  end: string;   // ISO
+  allDay?: boolean;
+  createdAt?: string; // ISO
+  updatedAt?: string; // ISO
 }

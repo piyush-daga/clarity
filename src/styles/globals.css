@@ -45,8 +45,8 @@ body {
 }
 
 .dark .card {
-  /* More opaque, frosted glass look in dark mode */
-  @apply bg-slate-900/80 border-slate-700 text-slate-100 backdrop-blur-xl backdrop-saturate-150;
+  /* More opaque, frosted glass look in dark mode; remove visible borders */
+  @apply bg-slate-900/80 border-transparent text-slate-100 backdrop-blur-xl backdrop-saturate-150;
 }
 
 
@@ -55,7 +55,8 @@ body {
 }
 
 .dark .btn {
-  @apply border-slate-700 bg-slate-800 hover:bg-slate-700/80 text-slate-100 focus-visible:ring-blue-400/50;
+  /* Remove borders in dark mode for a cleaner icon look */
+  @apply border-transparent bg-slate-800 hover:bg-slate-700/80 text-slate-100 focus-visible:ring-blue-400/50;
 }
 
 .btn-icon { @apply h-10 w-10 p-0 inline-flex items-center justify-center rounded-xl; }
@@ -434,3 +435,32 @@ input[type="datetime-local"].input::-webkit-calendar-picker-indicator { opacity:
   animation: subtaskBorderBlink 2.2s ease-in-out 1;
   border-radius: 12px; /* match input rounding */
 }
+
+/* Timeline styling */
+.timeline { position: relative; padding-left: 0.75rem; overflow-x: hidden; }
+.timeline::before { display: none; }
+.dark .timeline::before { display: none; }
+.timeline-item { position: relative; margin-bottom: 0.9rem; }
+/* disable previous per-item connectors; we'll draw them in gaps */
+.timeline-item::before, .timeline-item::after { display: none; }
+.timeline-card { background: rgba(255,255,255,0.85); border: 1px solid rgba(226,232,240,0.8); border-radius: 0.9rem; margin-left: -0.75rem; }
+.dark .timeline-card { background: rgba(2,6,23,0.7); border-color: transparent; }
+@keyframes timelinePop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.timeline-new { animation: timelinePop 220ms ease-out 1; }
+
+/* gap connector between cards */
+.timeline-gap { position: relative; height: 22px; }
+.timeline-gap::after { content: ""; position: absolute; left: 6px; top: 0; bottom: 0; width: 1px; background: rgba(100,116,139,0.28); }
+.dark .timeline-gap::after { background: rgba(148,163,184,0.35); }
+.timeline-gap::before { content: ""; position: absolute; left: 2px; top: 50%; transform: translateY(-50%); width: 8px; height: 8px; border-radius: 9999px; background: radial-gradient(circle at 50% 50%, #cbd5e1 0%, #94a3b8 40%, #94a3b8 100%); border: 2px solid #cbd5e1; box-shadow: 0 1px 0 rgba(15,23,42,0.05), 0 0 0 2px rgba(255,255,255,0.9); }
+.dark .timeline-gap::before { background: radial-gradient(circle at 50% 50%, #475569 0%, #94a3b8 40%, #94a3b8 100%); border-color: #475569; box-shadow: 0 1px 0 rgba(0,0,0,0.35), 0 0 0 2px rgba(15,23,42,0.9); }
+
+/* Day headers inside timeline */
+.timeline-day { margin: 0.75rem 0 0.25rem; padding-left: 0.75rem; font-size: 0.75rem; font-weight: 600; color: #64748b; letter-spacing: 0.01em; }
+.dark .timeline-day { color: #94a3b8; }
+
+/* In-range progress indicator */
+.timeline-progress { position: relative; height: 4px; margin: -0.25rem -0.75rem 0.5rem; border-top-left-radius: 0.9rem; border-top-right-radius: 0.9rem; overflow: hidden; background: linear-gradient(90deg, rgba(148,163,184,0.25), rgba(148,163,184,0.10)); }
+.dark .timeline-progress { background: linear-gradient(90deg, rgba(71,85,105,0.35), rgba(71,85,105,0.15)); }
+.timeline-progress-bar { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #60a5fa, #22d3ee); width: 0%; transition: width 0.4s ease; }
+.dark .timeline-progress-bar { background: linear-gradient(90deg, #93c5fd, #67e8f9); }

@@ -114,6 +114,10 @@ Useful scripts
 ## Changelog
 See `Changelog.md` for notable changes.
 
+## Timeline Updates
+- Live progress + time left: When a range is currently active, its card shows a subtle progress bar and “Xm left” next to the relative label.
+- Quick Add and day grouping: Removed by request to keep the Timeline minimal and focused.
+
 ## Contributing
 Issues and pull requests are welcome. If you plan a larger change, please open an issue first to discuss scope and approach.
 

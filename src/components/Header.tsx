@@ -1,8 +1,9 @@
 import Link from 'next/link';
-import { CalendarDays, Settings, Plus, Search, Sun, Moon, Eye, EyeOff } from 'lucide-react';
+import { CalendarDays, Settings, Plus, Search, Sun, Moon, Eye, EyeOff, Sparkles } from 'lucide-react';
 import React from 'react';
 import { useStore } from '@/store';
 import { applyTheme } from '@/lib/theme';
+import AISearchPanel from './AISearchPanel';
 
 type Props = { onQuickAdd: () => void };
 
@@ -11,6 +12,7 @@ export default function Header({ onQuickAdd }: Props) {
   const setSearch = useStore((s) => s.setSearch);
   const [focused, setFocused] = React.useState(false);
   const [isDark, setIsDark] = React.useState(false);
+  const [aiOpen, setAiOpen] = React.useState(false);
   const hideDone = useStore((s) => s.hideDone);
   const toggleHideDone = useStore((s) => s.toggleHideDone);
   React.useEffect(() => {
@@ -51,7 +53,16 @@ export default function Header({ onQuickAdd }: Props) {
               className="outline-none text-sm placeholder:text-gray-400 bg-transparent text-current w-full min-w-0"
               onFocus={() => setFocused(true)}
               onBlur={() => setFocused(false)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && search.trim()) { e.preventDefault(); setAiOpen(true); } }}
             />
+            <button
+              className="btn btn-ghost h-8 px-2 -mr-1"
+              aria-label="Ask AI"
+              title="Ask AI about your tasks"
+              onClick={() => { if (search.trim()) setAiOpen(true); }}
+            >
+              <Sparkles className="w-4 h-4 text-blue-600" />
+            </button>
           </div>
           <button className="btn btn-icon btn-ghost" aria-label={hideDone ? 'Show done' : 'Hide done'} title={hideDone ? 'Show Done' : 'Hide Done'} onClick={toggleHideDone}>
             {hideDone ? <Eye className="w-4 h-4"/> : <EyeOff className="w-4 h-4"/>}
@@ -64,6 +75,7 @@ export default function Header({ onQuickAdd }: Props) {
           <Link href="/settings" className="btn btn-icon btn-ghost" aria-label="Settings" title="Settings"><Settings className="w-4 h-4"/></Link>
         </div>
       </div>
+      <AISearchPanel open={aiOpen} query={search} onClose={() => setAiOpen(false)} />
     </header>
   );
 }

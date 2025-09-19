@@ -4,15 +4,16 @@ import { createPortal } from 'react-dom';
 import { useStore } from '@/store';
 import { toast } from '@/lib/toast';
 import { Task, SubTask, Stage } from '@/types';
+import { format, isSameDay, isSameYear, isToday, isTomorrow, isYesterday, isWithinInterval, differenceInMinutes } from 'date-fns';
 import { Trash2, Copy, X, Plus, Zap, Loader2 } from 'lucide-react';
 import { SUBTASKS_SYSTEM_PROMPT } from '@/lib/prompts';
 import { LS_AI_KEY, LS_AI_MODEL, DEFAULT_MODEL_ID } from '@/lib/ai';
 
-type Props = { open: boolean; taskId?: string | null; onClose: () => void };
+type Props = { open: boolean; taskId?: string | null; highlightRangeId?: string; onClose: () => void };
 
 // Colors removed
 
-export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
+export default function TaskDetailsDrawer({ open, taskId, highlightRangeId, onClose }: Props) {
   const task = useStore((s) => (taskId ? s.tasks[taskId] : undefined));
   const updateTask = useStore((s) => s.updateTask);
   const deleteTask = useStore((s) => s.deleteTask);
@@ -180,9 +181,30 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
           <h3 className="font-semibold">Task Details</h3>
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500 min-w-[60px] text-right">{saving === 'saving' ? 'Saving…' : saving === 'saved' ? 'Saved' : ''}</span>
-            <button className="btn border-transparent" aria-label="Duplicate task" title="Duplicate" onClick={duplicate}><Copy className="w-4 h-4" /></button>
-            <button className="btn border-transparent text-red-600 hover:bg-red-50" aria-label="Delete task" title="Delete" onClick={remove}><Trash2 className="w-4 h-4" /></button>
-            <button className="btn border-transparent" aria-label="Close" title="Close" onClick={closeWithAnimation}><X className="w-4 h-4" /></button>
+            <button
+              className="btn btn-icon bg-transparent dark:bg-transparent border-gray-200 dark:border-slate-600 hover:bg-transparent dark:hover:bg-transparent"
+              aria-label="Duplicate task"
+              title="Duplicate"
+              onClick={duplicate}
+            >
+              <Copy className="w-4 h-4" />
+            </button>
+            <button
+              className="btn btn-icon bg-transparent dark:bg-transparent border-gray-200 dark:border-slate-600 text-red-600 hover:bg-transparent dark:hover:bg-transparent"
+              aria-label="Delete task"
+              title="Delete"
+              onClick={remove}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              className="btn btn-icon bg-transparent dark:bg-transparent border-gray-200 dark:border-slate-600 hover:bg-transparent dark:hover:bg-transparent"
+              aria-label="Close"
+              title="Close"
+              onClick={closeWithAnimation}
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
         {!task || !local ? (
@@ -218,10 +240,7 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
             </div>
           </div>
           <DescriptionEditor value={local.description ?? ''} onChange={(v) => setLocal({ ...local, description: v })} />
-          <TimeRangeEditor task={local} setTask={setLocal} startRef={startTimeRef} />
-          <div className="flex items-center gap-2">
-            <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" className="checkbox-circle checkbox-xl" checked={!!local.allDay} onChange={(e) => setLocal({ ...local, allDay: e.target.checked })} onBlur={async () => { await updateTask(task.id, sanitize(local)); }} />All‑day</label>
-          </div>
+          <RangesTimeline taskId={task.id} highlightRangeId={highlightRangeId} />
           <SubtasksEditor task={local} setTask={setLocal} />
           {linked.length > 0 && (
             <div>
@@ -248,73 +267,247 @@ export default function TaskDetailsDrawer({ open, taskId, onClose }: Props) {
 
 // Removed the previous AI Subtasks pane; generation is now a single lightning button next to "+" in Subtasks.
 
-function TimeRangeEditor({ task, setTask, startRef }: { task: Task; setTask: (t: Task) => void; startRef?: React.RefObject<HTMLInputElement | null> }) {
-  const update = (patch: Partial<Task>) => setTask({ ...task, ...patch });
-  const startTime = toLocalTime(task.start);
-  const endTime = toLocalTime(task.end);
-  const onTime = (kind: 'start' | 'end') => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const t = e.target.value;
-    const base = kind === 'start' ? task.start : task.end;
-    const iso = fromLocalTime(base ?? task.start ?? task.end, t);
-    if (kind === 'start') update({ start: iso }); else update({ end: iso });
-  };
-  const invalid = !task.allDay && task.start && task.end && new Date(task.end).getTime() < new Date(task.start).getTime();
-  const fixIfInvalid = () => {
-    if (!invalid) return;
-    try {
-      if (!task.start) return;
-      const next = addMinutes(task.start, 30);
-      update({ end: next });
-    } catch {}
-  };
-  const setNow = () => {
+// TimeRangeEditor removed; Timeline is the primary editor now.
+
+function RangesTimeline({ taskId, highlightRangeId }: { taskId: string; highlightRangeId?: string }) {
+  const task = useStore((s) => s.tasks[taskId]);
+  const addRange = useStore((s) => s.addRange);
+  const updateRange = useStore((s) => s.updateRange);
+  const updateTask = useStore((s) => s.updateTask);
+  const deleteRange = useStore((s) => s.deleteRange);
+  const [adding, setAdding] = useState(false);
+  const [draftStart, setDraftStart] = useState<string>('');
+  const [draftEnd, setDraftEnd] = useState<string>('');
+  const [draftAllDay, setDraftAllDay] = useState<boolean>(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const seenRef = useRef<Set<string>>(new Set());
+  const initialized = useRef<boolean>(false);
+
+  const ranges = (task?.ranges && task.ranges.length > 0)
+    ? [...task.ranges].sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+    : (task?.start && task?.end ? [{ id: 'primary', taskId: task.id, start: task.start, end: task.end, allDay: task.allDay }] as any[] : []);
+
+  useEffect(() => {
+    for (const r of ranges) seenRef.current.add(r.id);
+    if (!initialized.current) initialized.current = true;
+  }, [ranges.map((r: any) => r.id).join(',')]);
+
+  const openAdd = () => {
+    setAdding(true);
     const now = new Date();
-    const end = addMinutes(now.toISOString(), 60);
-    update({ allDay: false, start: now.toISOString(), end });
-    try { (startRef?.current as HTMLInputElement | null)?.focus(); } catch {}
+    const end = new Date(now.getTime() + 60 * 60 * 1000);
+    setDraftStart(toLocalDT(now.toISOString())!);
+    setDraftEnd(toLocalDT(end.toISOString())!);
+    setDraftAllDay(false);
   };
-  const add30 = () => {
-    const base = task.end ?? task.start ?? new Date().toISOString();
-    update({ allDay: false, end: addMinutes(base, 30) });
+  const cancelAdd = () => { setAdding(false); };
+  const saveAdd = async () => {
+    const s = fromLocalDT(draftStart);
+    const e = fromLocalDT(draftEnd);
+    if (!s || !e) return;
+    await addRange(taskId, { start: s, end: e, allDay: draftAllDay });
+    setAdding(false);
   };
-  const add60 = () => {
-    const base = task.end ?? task.start ?? new Date().toISOString();
-    update({ allDay: false, end: addMinutes(base, 60) });
+
+  const fmtRange = (sISO: string, eISO: string, allDay?: boolean): string => {
+    try {
+      const s = new Date(sISO);
+      const e = new Date(eISO);
+      const sameDay = isSameDay(s, e);
+      const includeYear = !isSameYear(s, e);
+      if (allDay) {
+        return format(s, includeYear ? 'EEE, MMM d, yyyy' : 'EEE, MMM d') + ' • All‑day';
+      }
+      if (sameDay) {
+        const day = format(s, includeYear ? 'EEE, MMM d, yyyy' : 'EEE, MMM d');
+        return `${day} • ${format(s, 'p')} – ${format(e, 'p')}`;
+      }
+      const left = format(s, includeYear ? 'MMM d, yyyy p' : 'MMM d p');
+      const right = format(e, includeYear ? 'MMM d, yyyy p' : 'MMM d p');
+      return `${left} → ${right}`;
+    } catch { return ''; }
   };
+
+  // Relative time helper (Today/Tomorrow/Yesterday/in X)
+  const now = new Date();
+  const relativeShort = (d: Date): string => {
+    if (isToday(d)) return 'Today';
+    if (isTomorrow(d)) return 'Tomorrow';
+    if (isYesterday(d)) return 'Yesterday';
+    const diffMs = d.getTime() - now.getTime();
+    const future = diffMs > 0;
+    const absMin = Math.max(1, Math.round(Math.abs(diffMs) / 60000));
+    const val = absMin < 60 ? `${absMin}m` : (absMin < 1440 ? `${Math.round(absMin / 60)}h` : `${Math.round(absMin / 1440)}d`);
+    return future ? `in ${val}` : `${val} ago`;
+  };
+
+
+  const listRef = useRef<HTMLDivElement | null>(null);
+  // Collapse edit when clicking outside the editing card
+  useEffect(() => {
+    if (!editingId) return;
+    const onDocPointer = (ev: MouseEvent | TouchEvent) => {
+      const root = listRef.current;
+      if (!root) return;
+      const current = root.querySelector(`[data-range-id="${CSS.escape?.(editingId) || editingId}"]`) as HTMLElement | null;
+      if (!current) return;
+      const target = ev.target as Node | null;
+      if (target && current.contains(target)) return; // clicked inside editing card
+      setEditingId(null);
+    };
+    document.addEventListener('mousedown', onDocPointer, true);
+    document.addEventListener('touchstart', onDocPointer, true);
+    return () => {
+      document.removeEventListener('mousedown', onDocPointer, true);
+      document.removeEventListener('touchstart', onDocPointer, true);
+    };
+  }, [editingId]);
+  // Flash the requested range when opening from calendar
+  useEffect(() => {
+    if (!highlightRangeId) return;
+    const root = listRef.current;
+    if (!root) return;
+    const sel = root.querySelector(`[data-range-id="${CSS.escape?.(highlightRangeId) || highlightRangeId}"] .timeline-card`) as HTMLElement | null
+      || root.querySelector(`[data-range-id="${CSS.escape?.(highlightRangeId) || highlightRangeId}"]`) as HTMLElement | null;
+    if (sel) {
+      sel.classList.add('subtask-new-flash');
+      window.setTimeout(() => sel.classList.remove('subtask-new-flash'), 2400);
+    }
+  }, [highlightRangeId, ranges.map((r: any) => r.id).join(',')]);
+
   return (
-    <div>
-      <label className="text-sm text-gray-600 dark:text-gray-300">When</label>
-      <div className="mt-1 flex items-center gap-5">
-        <input
-          type="time"
-          step={60}
-          className="h-10 w-28 text-center rounded-2xl bg-transparent border-0 outline-none appearance-none ring-0 shadow-none focus-visible:ring-2 focus-visible:ring-gray-300 dark:focus-visible:ring-slate-600"
-          disabled={!!task.allDay}
-          value={startTime}
-          ref={startRef as any}
-          onChange={onTime('start')}
-        />
-        <span className="text-gray-500 dark:text-gray-400 select-none">→</span>
-        <input
-          type="time"
-          step={60}
-          className={`h-10 w-28 text-center rounded-2xl bg-transparent border-0 outline-none appearance-none ring-0 shadow-none focus-visible:ring-2 focus-visible:ring-gray-300 dark:focus-visible:ring-slate-600 ${invalid ? 'opacity-60' : ''}`}
-          disabled={!!task.allDay}
-          value={endTime}
-          onChange={onTime('end')}
-          onBlur={fixIfInvalid}
-        />
+    <div className="min-w-0">
+      <div className="flex items-center justify-between">
+        <label className="text-sm text-gray-600 dark:text-gray-300">Timeline</label>
+        {!adding && (
+          <button
+            type="button"
+            className="btn btn-ghost h-9 w-9 p-0 inline-flex items-center justify-center bg-transparent dark:bg-transparent dark:hover:bg-transparent border-0 dark:border-transparent"
+            aria-label="Add range"
+            title="Add range"
+            onClick={openAdd}
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+        )}
       </div>
-      {task.allDay && (
-        <div className="text-xs text-gray-500 mt-1">All‑day</div>
-      )}
-      {!task.allDay && (
-        <div className="mt-2 flex items-center gap-2 text-xs">
-          <button type="button" className="btn btn-ghost h-8 px-2 text-xs" onClick={setNow}>Now</button>
-          <button type="button" className="btn btn-ghost h-8 px-2 text-xs" onClick={add30}>+30m</button>
-          <button type="button" className="btn btn-ghost h-8 px-2 text-xs" onClick={add60}>+1h</button>
-        </div>
-      )}
+      {/* Quick Add removed by request */}
+      {/* Summary line removed per request */}
+      <div ref={listRef} className="timeline mt-2">
+        {adding && (
+          <div className="timeline-item timeline-new">
+            <div className="timeline-card card p-3">
+              <div className="space-y-2">
+                <div>
+                  <label className="text-xs text-gray-500">From</label>
+                  <input type="datetime-local" className="input h-9 w-full" value={draftStart} onChange={(e) => setDraftStart(e.target.value)} />
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">To</label>
+                  <input type="datetime-local" className="input h-9 w-full" value={draftEnd} onChange={(e) => setDraftEnd(e.target.value)} />
+                </div>
+                <label className="inline-flex items-center gap-2 text-xs">
+                  <input type="checkbox" className="checkbox-circle" checked={!!draftAllDay} onChange={(e) => setDraftAllDay(e.target.checked)} />
+                  All‑day
+                </label>
+                <div className="flex items-center justify-end gap-2">
+                  <button type="button" className="btn btn-ghost h-8 px-3 text-xs" onClick={cancelAdd}>Cancel</button>
+                  <button type="button" className="btn h-8 px-3 text-xs" onClick={saveAdd}>Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {(() => {
+          const out: JSX.Element[] = [];
+          const arr = ranges as any[];
+          for (let i = 0; i < arr.length; i++) {
+            const r = arr[i];
+            const isFirst = i === 0;
+            const isLast = i === arr.length - 1;
+            const isEditing = editingId === r.id;
+            const isNew = initialized.current ? !seenRef.current.has(r.id) : false;
+            const startDate = new Date(r.start);
+            const endDate = new Date(r.end);
+            const inProgress = isWithinInterval(new Date(), { start: startDate, end: endDate });
+            const durationMin = Math.max(1, differenceInMinutes(endDate, startDate));
+            const elapsedMin = inProgress ? Math.max(0, Math.min(durationMin, differenceInMinutes(new Date(), startDate))) : 0;
+            const pct = inProgress ? Math.max(0, Math.min(100, Math.round((elapsedMin / durationMin) * 100))) : 0;
+            const node = (
+              <div
+                className="timeline-card card p-3 min-w-0"
+                onClick={() => { if (!isEditing) setEditingId(r.id); }}
+                role={!isEditing ? 'button' : undefined}
+                tabIndex={!isEditing ? 0 : undefined}
+              >
+                {inProgress && (
+                  <div className="timeline-progress" aria-hidden>
+                    <div className="timeline-progress-bar" style={{ width: pct + '%' }} />
+                  </div>
+                )}
+                {!isEditing ? (
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="text-sm min-w-0">
+                      <div className="font-medium truncate">{fmtRange(r.start, r.end, r.allDay)}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {relativeShort(startDate)}{inProgress ? ` • ${Math.max(1, durationMin - elapsedMin)}m left` : ''}
+                      </div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-1">
+                      <button className="btn btn-ghost h-9 w-9 p-0 inline-flex items-center justify-center bg-transparent dark:bg-transparent dark:hover:bg-transparent border-0 dark:border-transparent" aria-label="Delete range" title="Delete range" onClick={async (e) => {
+                        e.stopPropagation();
+                        if (r.id === 'primary') await updateTask(taskId, { start: undefined, end: undefined });
+                        else await deleteRange(r.id);
+                      }}>
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div>
+                      <label className="text-xs text-gray-500">From</label>
+                      <input type="datetime-local" className="input h-9 w-full" value={toLocalDT(r.start)} onChange={async (e) => {
+                        const iso = fromLocalDT(e.target.value);
+                        if (r.id === 'primary') await updateTask(taskId, { start: iso });
+                        else await updateRange(r.id, { start: iso });
+                      }} />
+                    </div>
+                    <div>
+                      <label className="text-xs text-gray-500">To</label>
+                      <input type="datetime-local" className="input h-9 w-full" value={toLocalDT(r.end)} onChange={async (e) => {
+                        const iso = fromLocalDT(e.target.value);
+                        if (r.id === 'primary') await updateTask(taskId, { end: iso });
+                        else await updateRange(r.id, { end: iso });
+                      }} />
+                    </div>
+                    <label className="inline-flex items-center gap-2 text-xs">
+                      <input type="checkbox" className="checkbox-circle" checked={!!r.allDay} onChange={async (e) => {
+                        const allDay = e.target.checked;
+                        if (r.id === 'primary') await updateTask(taskId, { allDay });
+                        else await updateRange(r.id, { allDay });
+                      }} />
+                      All‑day
+                    </label>
+                    <div className="flex items-center justify-end">
+                      <button className="btn btn-ghost h-8 px-3 text-xs" onClick={() => setEditingId(null)}>Done</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+            out.push(
+              <div key={r.id} className={`timeline-item ${isNew ? 'timeline-new' : ''}`} data-range-id={r.id}>
+                {node}
+              </div>
+            );
+            if (!isLast) {
+              out.push(<div key={`gap-${r.id}`} className="timeline-gap" aria-hidden />);
+            }
+          }
+          return out;
+        })()}
+      </div>
     </div>
   );
 }
@@ -492,7 +685,7 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
         <div className="text-sm text-gray-600 dark:text-gray-300">Subtasks</div>
         <div className="flex items-center gap-2">
           <button
-            className="btn border-transparent h-9 w-9 p-0 inline-flex items-center justify-center"
+            className="btn btn-ghost h-9 w-9 p-0 inline-flex items-center justify-center bg-transparent dark:bg-transparent dark:hover:bg-transparent border-0 dark:border-transparent"
             aria-label="Generate subtasks"
             title="Generate subtasks from title & description"
             onClick={async () => {
@@ -557,7 +750,7 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
           >
             {genState === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4" />}
           </button>
-          <button className="btn border-transparent h-9 w-9 p-0 inline-flex items-center justify-center" aria-label="Add subtask" title="Add subtask" onClick={add}>
+          <button className="btn btn-ghost h-9 w-9 p-0 inline-flex items-center justify-center bg-transparent dark:bg-transparent dark:border-transparent" aria-label="Add subtask" title="Add subtask" onClick={add}>
             <Plus className="w-4 h-4" />
           </button>
         </div>
@@ -585,7 +778,7 @@ function SubtasksEditor({ task, setTask }: { task: Task; setTask: (t: Task) => v
                   }
                 }}
               />
-              <button className="btn border-transparent h-9 w-9 p-0 inline-flex items-center justify-center" aria-label="Delete subtask" title="Delete subtask" onClick={() => remove(st.id)}>
+              <button className="btn btn-ghost h-9 w-9 p-0 inline-flex items-center justify-center bg-transparent dark:bg-transparent dark:hover:bg-transparent border-0 dark:border-transparent" aria-label="Delete subtask" title="Delete subtask" onClick={() => remove(st.id)}>
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -608,28 +801,7 @@ function fromLocalDT(s: string): string | undefined {
   return new Date(s).toISOString();
 }
 
-function toLocalTime(iso?: string): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function fromLocalTime(baseIso: string | undefined, time: string): string | undefined {
-  if (!time) return baseIso; // keep existing if time cleared
-  const [hh, mm] = time.split(':').map((x) => parseInt(x || '0', 10));
-  const base = baseIso ? new Date(baseIso) : new Date();
-  if (isNaN(base.getTime())) return baseIso;
-  base.setHours(hh, mm || 0, 0, 0);
-  return base.toISOString();
-}
-
-function addMinutes(baseIso: string, mins: number): string {
-  const d = new Date(baseIso);
-  if (isNaN(d.getTime())) return baseIso;
-  d.setMinutes(d.getMinutes() + mins, 0, 0);
-  return d.toISOString();
-}
+// toLocalTime helpers removed with TimeRangeEditor
 
 function sanitize(t: Task): Partial<Task> {
   return {

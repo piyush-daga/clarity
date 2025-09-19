@@ -14,6 +14,8 @@ export default function CalendarView() {
   const events = useEvents();
   const search = useStore((s) => s.search).toLowerCase();
   const updateTask = useStore((s) => s.updateTask);
+  const addRange = useStore((s) => s.addRange);
+  const updateRange = useStore((s) => s.updateRange);
   const toggleChecked = useStore((s) => s.toggleChecked);
   const createTask = useStore((s) => s.createTask);
   const deleteTask = useStore((s) => s.deleteTask);
@@ -51,8 +53,10 @@ export default function CalendarView() {
       const { id, title } = (e as CustomEvent<{ id: string; title: string }>).detail || {} as any;
       if (!id) return;
       const api = calendarRef.current?.getApi?.();
-      const ev = api?.getEventById?.(id);
-      if (ev) enqueue(() => ev.setProp('title', title ?? ''));
+      if (!api) return;
+      const all = api.getEvents?.() || [];
+      const affected = all.filter((ev: any) => ev.extendedProps?.taskId === id || String(ev.id).startsWith(id + ':'));
+      enqueue(() => affected.forEach((ev: any) => ev.setProp('title', title ?? '')));
     };
     const onDone = (e: Event) => {
       const { id, title } = (e as CustomEvent<{ id: string; title?: string }>).detail || {} as any;
@@ -67,7 +71,14 @@ export default function CalendarView() {
           try { ev?.remove?.(); } catch {}
           return;
         }
-        try { if (ev) ev.setProp('classNames', ['fc-event-minimal']); } catch {}
+        try {
+          if (ev) ev.setProp('classNames', ['fc-event-minimal']);
+          // Also update all sibling occurrences for the same task id
+          const api = calendarRef.current?.getApi?.();
+          const all = api?.getEvents?.() || [];
+          const affected = all.filter((e: any) => e.extendedProps?.taskId === id || String(e.id).startsWith(id + ':'));
+          affected.forEach((e: any) => e.setProp('title', trimmed));
+        } catch {}
       });
     };
     window.addEventListener('task-editing-title', onTitle as EventListener);
@@ -94,23 +105,33 @@ export default function CalendarView() {
 
   const calendarEvents = useMemo(() => {
     const enabledCals = new Set(calendars.filter((c) => c.enabled).map((c) => c.id));
-    return events
-      .filter((t) => enabledCals.has(t.calendarId) && !t.hiddenOnCalendar && !!t.start && !!t.end)
-      .filter((t) => !(hideDone && (t.checked || t.stage === 'done')))
-      .filter((t) => !search || t.title.toLowerCase().includes(search) || (t.description ?? '').toLowerCase().includes(search))
-      .map((t) => ({
-        id: t.id,
-        title: t.title,
-        start: t.start,
-        end: t.end,
-        allDay: t.allDay,
-        extendedProps: {
-          stage: t.stage,
-          checked: t.checked,
-          subTotal: Array.isArray(t.subTasks) ? t.subTasks.length : 0,
-          subDone: Array.isArray(t.subTasks) ? t.subTasks.filter((s) => s.done).length : 0,
-        },
-      }));
+    const list: any[] = [];
+    const filterText = (t: any) => !search || t.title.toLowerCase().includes(search) || (t.description ?? '').toLowerCase().includes(search);
+    for (const t of events) {
+      if (!enabledCals.has(t.calendarId) || t.hiddenOnCalendar) continue;
+      if (hideDone && (t.checked || t.stage === 'done')) continue;
+      if (!filterText(t)) continue;
+      const ranges = (t.ranges && t.ranges.length > 0) ? t.ranges : (t.start && t.end ? [{ id: 'primary', taskId: t.id, start: t.start, end: t.end, allDay: t.allDay }] as any[] : []);
+      for (const r of ranges) {
+        if (!r.start || !r.end) continue;
+        list.push({
+          id: `${t.id}:${r.id}`,
+          title: t.title,
+          start: r.start,
+          end: r.end,
+          allDay: !!r.allDay,
+          extendedProps: {
+            taskId: t.id,
+            rangeId: String(r.id),
+            stage: t.stage,
+            checked: t.checked,
+            subTotal: Array.isArray(t.subTasks) ? t.subTasks.length : 0,
+            subDone: Array.isArray(t.subTasks) ? t.subTasks.filter((s) => s.done).length : 0,
+          },
+        });
+      }
+    }
+    return list;
   }, [events, calendars, search, hideDone]);
 
   return (
@@ -152,7 +173,11 @@ export default function CalendarView() {
         selectMinDistance={6}
         slotLabelFormat={{ hour: 'numeric', hour12: true }}
         eventTimeFormat={{ hour: 'numeric', minute: '2-digit', hour12: true }}
-        eventClassNames={(arg: any) => creatingIds.current.has(arg.event.id) ? 'fc-event-minimal fc-event-creating' : 'fc-event-minimal'}
+        eventClassNames={(arg: any) => {
+          const ep: any = arg.event.extendedProps || {};
+          const key = ep.taskId || String(arg.event.id);
+          return creatingIds.current.has(key) ? 'fc-event-minimal fc-event-creating' : 'fc-event-minimal';
+        }}
         eventContent={(arg: any) => {
           const ep: any = arg.event.extendedProps || {};
           const done = ep.subDone ?? 0;
@@ -168,7 +193,7 @@ export default function CalendarView() {
           if (compact) {
             return (
               <div className="flex items-center gap-1 text-xs leading-tight w-full">
-                <input aria-label="Mark done" type="checkbox" className="checkbox-circle" checked={!!ep.checked} onChange={(e) => { e.stopPropagation(); toggleChecked(arg.event.id); }} onClick={(e) => e.stopPropagation()} />
+                <input aria-label="Mark done" type="checkbox" className="checkbox-circle" checked={!!ep.checked} onChange={(e) => { e.stopPropagation(); toggleChecked(ep.taskId || String(arg.event.id).split(':')[0]); }} onClick={(e) => e.stopPropagation()} />
                 <span className={`truncate ${strike}`}>{arg.event.title}</span>
                 {total > 0 && <span className="fc-pill">{done}/{total}</span>}
               </div>
@@ -177,7 +202,7 @@ export default function CalendarView() {
           return (
             <div className="flex flex-col h-full w-full">
               <div className="fc-event-body flex items-start gap-2 flex-1 min-h-0 overflow-hidden">
-                <input aria-label="Mark done" type="checkbox" className="checkbox-circle" checked={!!ep.checked} onChange={(e) => { e.stopPropagation(); toggleChecked(arg.event.id); }} onClick={(e) => e.stopPropagation()} />
+                <input aria-label="Mark done" type="checkbox" className="checkbox-circle" checked={!!ep.checked} onChange={(e) => { e.stopPropagation(); toggleChecked(ep.taskId || String(arg.event.id).split(':')[0]); }} onClick={(e) => e.stopPropagation()} />
                 <span className={`fc-event-title ${strike}`}>{arg.event.title}</span>
                 {total > 0 && <span className="fc-pill">{done}/{total}</span>}
               </div>
@@ -214,6 +239,11 @@ export default function CalendarView() {
         dateClick={async (info: any) => {
           const clicks = (info.jsEvent as MouseEvent | undefined)?.detail ?? 1;
           if (clicks < 2) return;
+          // Ignore double-clicks originating on existing events to avoid accidental duplicates
+          try {
+            const target = (info.jsEvent as MouseEvent | undefined)?.target as HTMLElement | undefined;
+            if (target && (target.closest('.fc-event') || target.closest('.fc-daygrid-event'))) return;
+          } catch {}
           const api = calendarRef.current?.getApi?.();
           const viewType = api?.view?.type;
           // Create event based on the clicked context
@@ -263,7 +293,9 @@ export default function CalendarView() {
         }}
         eventClick={(info: any) => {
           try {
-            window.dispatchEvent(new CustomEvent('open-task-details', { detail: { id: info.event.id } }));
+            const id: string = info.event.extendedProps?.taskId || String(info.event.id).split(':')[0];
+            const rangeId: string | undefined = info.event.extendedProps?.rangeId;
+            window.dispatchEvent(new CustomEvent('open-task-details', { detail: { id, rangeId } }));
             info.jsEvent?.preventDefault();
             info.jsEvent?.stopPropagation();
           } catch {}
@@ -280,10 +312,27 @@ export default function CalendarView() {
             const dur = 30 * 60 * 1000; // 30 minutes
             end = new Date(start.getTime() + dur);
           }
-          await updateTask(ev.id, { start: start?.toISOString(), end: end?.toISOString(), allDay });
+          const rangeId: string = ev.extendedProps?.rangeId;
+          const taskId: string = ev.extendedProps?.taskId || String(ev.id).split(':')[0];
+          if (rangeId && rangeId !== 'primary') {
+            await updateRange(rangeId, { start: start?.toISOString(), end: end?.toISOString(), allDay });
+          } else {
+            // Fallback single-range task: updating task will create/update its single range
+            await updateTask(taskId, { start: start?.toISOString(), end: end?.toISOString(), allDay });
+          }
         }}
         eventResize={async (info: any) => {
-          await updateTask(info.event.id, { start: info.event.start?.toISOString(), end: info.event.end?.toISOString(), allDay: info.event.allDay });
+          const ev: any = info.event;
+          const rangeId: string = ev.extendedProps?.rangeId;
+          const taskId: string = ev.extendedProps?.taskId || String(ev.id).split(':')[0];
+          const startISO = ev.start?.toISOString();
+          const endISO = ev.end?.toISOString();
+          const allDay = ev.allDay as boolean;
+          if (rangeId && rangeId !== 'primary') {
+            await updateRange(rangeId, { start: startISO, end: endISO, allDay });
+          } else {
+            await updateTask(taskId, { start: startISO, end: endISO, allDay });
+          }
         }}
         eventDidMount={(info: any) => {
           try {
@@ -301,9 +350,9 @@ export default function CalendarView() {
         }}
         drop={async (info: any) => {
           const id = (info.draggedEl as HTMLElement).getAttribute('data-id')!;
-          const start = info.date;
+          const start = info.date as Date;
           const end = new Date(start.getTime() + 60 * 60 * 1000);
-          await updateTask(id, { start: start.toISOString(), end: end.toISOString(), allDay: info.allDay ?? false });
+          await addRange(id, { start: start.toISOString(), end: end.toISOString(), allDay: info.allDay ?? false });
         }}
         events={calendarEvents}
       />

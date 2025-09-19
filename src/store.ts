@@ -28,6 +28,10 @@ type Actions = {
   toggleCalendarEnabled: (calendarId: string, enabled: boolean) => Promise<void>;
   createFollowUp: (id: string) => Promise<Task>;
   tasksByStage: (stage: Stage) => Task[];
+  // Timeline ranges
+  addRange: (taskId: string, input: { start: string; end: string; allDay?: boolean }) => Promise<Task>;
+  updateRange: (rangeId: string, patch: { start?: string; end?: string; allDay?: boolean }) => Promise<Task>;
+  deleteRange: (rangeId: string) => Promise<Task>;
 };
 
 export const useStore = create<State & Actions>((set, get) => ({
@@ -163,6 +167,23 @@ export const useStore = create<State & Actions>((set, get) => ({
 
   tasksByStage: (stage) => {
     return Object.values(get().tasks).filter((t) => t.stage === stage).sort(orderComparator);
+  },
+
+  // --- Ranges (timeline) ---
+  addRange: async (taskId, input) => {
+    const t = await db.addRange(taskId, input);
+    set((s) => ({ tasks: { ...s.tasks, [taskId]: t } }));
+    return t;
+  },
+  updateRange: async (rangeId, patch) => {
+    const t = await db.updateRange(rangeId, patch);
+    set((s) => ({ tasks: { ...s.tasks, [t.id]: t } }));
+    return t;
+  },
+  deleteRange: async (rangeId) => {
+    const t = await db.deleteRange(rangeId);
+    set((s) => ({ tasks: { ...s.tasks, [t.id]: t } }));
+    return t;
   },
 }));
 
