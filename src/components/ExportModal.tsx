@@ -3,13 +3,14 @@ import { useMemo, useState } from 'react';
 import { useStore } from '@/store';
 import { buildCSV, buildICS, downloadCSV, downloadICS, filenameDateStamp } from '@/lib/export';
 import { isWithinInterval, parseISO } from 'date-fns';
+import DateTimePicker from '@/components/DateTimePicker';
 
 type Props = { open: boolean; onClose: () => void };
 
 export default function ExportModal({ open, onClose }: Props) {
   const tasks = useStore((s) => Object.values(s.tasks));
-  const [from, setFrom] = useState<string>('');
-  const [to, setTo] = useState<string>('');
+  const [from, setFrom] = useState<string | undefined>(undefined); // ISO
+  const [to, setTo] = useState<string | undefined>(undefined);     // ISO
   const [includeTodos, setIncludeTodos] = useState(true);
   const [includeEvents, setIncludeEvents] = useState(true);
 
@@ -46,11 +47,11 @@ export default function ExportModal({ open, onClose }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="text-sm text-gray-600 dark:text-gray-300">From</label>
-            <input type="datetime-local" className="input mt-1" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <DateTimePicker className="mt-1" value={from} onChange={setFrom} />
           </div>
           <div>
             <label className="text-sm text-gray-600 dark:text-gray-300">To</label>
-            <input type="datetime-local" className="input mt-1" value={to} onChange={(e) => setTo(e.target.value)} />
+            <DateTimePicker className="mt-1" value={to} onChange={setTo} />
           </div>
         </div>
         <div className="flex items-center gap-4 mt-3 text-sm">

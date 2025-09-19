@@ -6,6 +6,7 @@ import { toast } from '@/lib/toast';
 import { Task, SubTask, Stage } from '@/types';
 import { format, isSameDay, isSameYear, isToday, isTomorrow, isYesterday, isWithinInterval, differenceInMinutes } from 'date-fns';
 import { Trash2, Copy, X, Plus, Zap, Loader2 } from 'lucide-react';
+import DateTimePicker from '@/components/DateTimePicker';
 import { SUBTASKS_SYSTEM_PROMPT } from '@/lib/prompts';
 import { LS_AI_KEY, LS_AI_MODEL, DEFAULT_MODEL_ID } from '@/lib/ai';
 
@@ -173,6 +174,7 @@ export default function TaskDetailsDrawer({ open, taskId, highlightRangeId, onCl
       {/* Right-side fixed panel */}
       <div
         ref={panelRef}
+        data-details-panel
         className="fixed right-0 top-0 h-screen w-full max-w-md card border-0 p-4 overflow-y-auto bg-white/90 dark:bg-slate-900/80 backdrop-blur"
         onClick={(e) => e.stopPropagation()}
         onMouseDown={(e) => e.stopPropagation()}
@@ -276,8 +278,8 @@ function RangesTimeline({ taskId, highlightRangeId }: { taskId: string; highligh
   const updateTask = useStore((s) => s.updateTask);
   const deleteRange = useStore((s) => s.deleteRange);
   const [adding, setAdding] = useState(false);
-  const [draftStart, setDraftStart] = useState<string>('');
-  const [draftEnd, setDraftEnd] = useState<string>('');
+  const [draftStart, setDraftStart] = useState<string | undefined>(undefined); // ISO
+  const [draftEnd, setDraftEnd] = useState<string | undefined>(undefined);     // ISO
   const [draftAllDay, setDraftAllDay] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const seenRef = useRef<Set<string>>(new Set());
@@ -296,14 +298,14 @@ function RangesTimeline({ taskId, highlightRangeId }: { taskId: string; highligh
     setAdding(true);
     const now = new Date();
     const end = new Date(now.getTime() + 60 * 60 * 1000);
-    setDraftStart(toLocalDT(now.toISOString())!);
-    setDraftEnd(toLocalDT(end.toISOString())!);
+    setDraftStart(now.toISOString());
+    setDraftEnd(end.toISOString());
     setDraftAllDay(false);
   };
   const cancelAdd = () => { setAdding(false); };
   const saveAdd = async () => {
-    const s = fromLocalDT(draftStart);
-    const e = fromLocalDT(draftEnd);
+    const s = draftStart;
+    const e = draftEnd;
     if (!s || !e) return;
     await addRange(taskId, { start: s, end: e, allDay: draftAllDay });
     setAdding(false);
@@ -351,7 +353,9 @@ function RangesTimeline({ taskId, highlightRangeId }: { taskId: string; highligh
       if (!root) return;
       const current = root.querySelector(`[data-range-id="${CSS.escape?.(editingId) || editingId}"]`) as HTMLElement | null;
       if (!current) return;
-      const target = ev.target as Node | null;
+      const target = ev.target as HTMLElement | null;
+      // Ignore clicks inside the DateTimePicker popover
+      if (target && (target.closest('.dtp-pop') || target.closest('.dtp-portal'))) return;
       if (target && current.contains(target)) return; // clicked inside editing card
       setEditingId(null);
     };
@@ -400,11 +404,11 @@ function RangesTimeline({ taskId, highlightRangeId }: { taskId: string; highligh
               <div className="space-y-2">
                 <div>
                   <label className="text-xs text-gray-500">From</label>
-                  <input type="datetime-local" className="input h-9 w-full" value={draftStart} onChange={(e) => setDraftStart(e.target.value)} />
+                  <DateTimePicker value={draftStart} onChange={setDraftStart} dateOnly={draftAllDay} />
                 </div>
                 <div>
                   <label className="text-xs text-gray-500">To</label>
-                  <input type="datetime-local" className="input h-9 w-full" value={draftEnd} onChange={(e) => setDraftEnd(e.target.value)} />
+                  <DateTimePicker value={draftEnd} onChange={setDraftEnd} dateOnly={draftAllDay} />
                 </div>
                 <label className="inline-flex items-center gap-2 text-xs">
                   <input type="checkbox" className="checkbox-circle" checked={!!draftAllDay} onChange={(e) => setDraftAllDay(e.target.checked)} />
@@ -467,19 +471,17 @@ function RangesTimeline({ taskId, highlightRangeId }: { taskId: string; highligh
                   <div className="space-y-2">
                     <div>
                       <label className="text-xs text-gray-500">From</label>
-                      <input type="datetime-local" className="input h-9 w-full" value={toLocalDT(r.start)} onChange={async (e) => {
-                        const iso = fromLocalDT(e.target.value);
+                      <DateTimePicker value={r.start} onChange={async (iso) => {
                         if (r.id === 'primary') await updateTask(taskId, { start: iso });
                         else await updateRange(r.id, { start: iso });
-                      }} />
+                      }} dateOnly={!!r.allDay} />
                     </div>
                     <div>
                       <label className="text-xs text-gray-500">To</label>
-                      <input type="datetime-local" className="input h-9 w-full" value={toLocalDT(r.end)} onChange={async (e) => {
-                        const iso = fromLocalDT(e.target.value);
+                      <DateTimePicker value={r.end} onChange={async (iso) => {
                         if (r.id === 'primary') await updateTask(taskId, { end: iso });
                         else await updateRange(r.id, { end: iso });
-                      }} />
+                      }} dateOnly={!!r.allDay} />
                     </div>
                     <label className="inline-flex items-center gap-2 text-xs">
                       <input type="checkbox" className="checkbox-circle" checked={!!r.allDay} onChange={async (e) => {
@@ -489,9 +491,7 @@ function RangesTimeline({ taskId, highlightRangeId }: { taskId: string; highligh
                       }} />
                       All‑day
                     </label>
-                    <div className="flex items-center justify-end">
-                      <button className="btn btn-ghost h-8 px-3 text-xs" onClick={() => setEditingId(null)}>Done</button>
-                    </div>
+                    {/* Done button removed: click outside to close editing */}
                   </div>
                 )}
               </div>

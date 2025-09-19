@@ -5,6 +5,7 @@ import { LS_AI_KEY, LS_AI_MODEL, DEFAULT_MODEL_ID } from '@/lib/ai';
 import { toast } from '@/lib/toast';
 import Link from 'next/link';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
+import DateTimePicker from '@/components/DateTimePicker';
 
 type Props = { open: boolean; onClose: () => void };
 
@@ -209,17 +210,17 @@ function PreviewItem({ item, setItem, index, onRemove }: { item: DraftItem; setI
         <div>
           <label className="text-sm text-gray-600 dark:text-gray-300">{item.allDay ? 'Date' : 'Start'}</label>
           {item.allDay ? (
-            <input type="date" className="input mt-1" value={toLocalDate(item.start)} onChange={(e)=>setItem(setAllDayDate(item, e.target.value, 'start'))} />
+            <DateTimePicker className="mt-1" dateOnly value={item.start} onChange={(iso)=> setItem(normalizeAllDayRange({ ...item, start: iso }))} />
           ) : (
-            <input type="datetime-local" className="input mt-1" value={toLocalDT(item.start)} onChange={(e)=>setItem({ ...item, start: fromLocalDT(e.target.value) })} />
+            <DateTimePicker className="mt-1" value={item.start} onChange={(iso)=> setItem({ ...item, start: iso })} />
           )}
         </div>
         <div>
           <label className="text-sm text-gray-600 dark:text-gray-300">{item.allDay ? 'End Date' : 'End'}</label>
           {item.allDay ? (
-            <input type="date" className="input mt-1" value={toLocalDate(item.end)} onChange={(e)=>setItem(setAllDayDate(item, e.target.value, 'end'))} />
+            <DateTimePicker className="mt-1" dateOnly value={item.end} onChange={(iso)=> setItem(normalizeAllDayRange({ ...item, end: iso }))} />
           ) : (
-            <input type="datetime-local" className="input mt-1" value={toLocalDT(item.end)} onChange={(e)=>setItem({ ...item, end: fromLocalDT(e.target.value) })} />
+            <DateTimePicker className="mt-1" value={item.end} onChange={(iso)=> setItem({ ...item, end: iso })} />
           )}
         </div>
       </div>
