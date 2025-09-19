@@ -111,6 +111,7 @@ export default function CalendarView() {
       if (!enabledCals.has(t.calendarId) || t.hiddenOnCalendar) continue;
       if (hideDone && (t.checked || t.stage === 'done')) continue;
       if (!filterText(t)) continue;
+      const hasMultiRanges = Array.isArray(t.ranges) && t.ranges.length > 1;
       const ranges = (t.ranges && t.ranges.length > 0) ? t.ranges : (t.start && t.end ? [{ id: 'primary', taskId: t.id, start: t.start, end: t.end, allDay: t.allDay }] as any[] : []);
       for (const r of ranges) {
         if (!r.start || !r.end) continue;
@@ -127,6 +128,7 @@ export default function CalendarView() {
             checked: t.checked,
             subTotal: Array.isArray(t.subTasks) ? t.subTasks.length : 0,
             subDone: Array.isArray(t.subTasks) ? t.subTasks.filter((s) => s.done).length : 0,
+            hasMultiRanges,
           },
         });
       }
@@ -176,7 +178,8 @@ export default function CalendarView() {
         eventClassNames={(arg: any) => {
           const ep: any = arg.event.extendedProps || {};
           const key = ep.taskId || String(arg.event.id);
-          return creatingIds.current.has(key) ? 'fc-event-minimal fc-event-creating' : 'fc-event-minimal';
+          const base = creatingIds.current.has(key) ? 'fc-event-minimal fc-event-creating' : 'fc-event-minimal';
+          return ep.hasMultiRanges ? base + ' fc-event-has-multi' : base;
         }}
         eventContent={(arg: any) => {
           const ep: any = arg.event.extendedProps || {};

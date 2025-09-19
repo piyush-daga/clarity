@@ -178,6 +178,10 @@ input[type="time"].input::-webkit-calendar-picker-indicator { opacity: 0.7; filt
   background: #ffffff !important; /* solid light background for contrast */
 }
 
+/* Indicator for tasks with multiple timeline ranges (calendar-only) */
+.fc-event-minimal.fc-event-has-multi { border-left: 4px solid #64748b !important; padding-left: 8px; }
+.dark .fc-event-minimal.fc-event-has-multi { border-left-color: #94a3b8 !important; }
+
 .dark .fc-event-minimal {
   color: #e8eef7 !important; /* high-contrast text */
   background: rgba(255,255,255,0.16) !important; /* more visible on dark bg */
