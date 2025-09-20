@@ -458,7 +458,7 @@ input[type="datetime-local"].input::-webkit-calendar-picker-indicator { opacity:
 /* disable previous per-item connectors; we'll draw them in gaps */
 .timeline-item::before, .timeline-item::after { display: none; }
 .timeline-card { background: rgba(255,255,255,0.85); border: 1px solid rgba(226,232,240,0.8); border-radius: 0.9rem; margin-left: -0.75rem; }
-.dark .timeline-card { background: rgba(2,6,23,0.7); border-color: transparent; }
+.dark .timeline-card { background: rgba(255,255,255,0.08); border-color: rgba(148,163,184,0.18); }
 @keyframes timelinePop { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 .timeline-new { animation: timelinePop 220ms ease-out 1; }
 
@@ -481,7 +481,8 @@ input[type="datetime-local"].input::-webkit-calendar-picker-indicator { opacity:
 
 /* DateTimePicker (aesthetic calendar popover) */
 .dtp-pop { min-width: 280px; border-radius: 12px; background: rgba(255,255,255,0.95); }
-.dark .dtp-pop { background: rgba(2,6,23,0.9); }
+/* Match dark timeline card surface for consistency */
+.dark .dtp-pop { background: rgba(255,255,255,0.08); border-color: rgba(148,163,184,0.18); }
 .dtp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .dtp-wd { text-align: center; font-size: 10px; font-weight: 600; color: #64748b; padding: 2px 0; }
 .dark .dtp-wd { color: #94a3b8; }
